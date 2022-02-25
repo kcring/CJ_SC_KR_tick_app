@@ -77,7 +77,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                               # add slider input
                               # add checkbox group
                               #checkboxGroupInput(inputId = "County",
-                              #label = "Select County",
+                             # label = "Select Life Stage",
                               #choices = c("Sierra" ,"Sacramento","Santa Barbara" , "Calaveras" ,"Ventura", "Los Angeles","Sonoma", "San Francisco","Marin" ,"Mariposa","Lassen","Napa","Kings","San Diego","Placer", "San Francisco", "Marin","Mariposa",  "Lassen", "Napa", "Shasta","Monterey", "Trinity","Mendocino","Inyo","Mono","Tuolumne","Solano", "San Bernardino", "Contra Costa" ,"Alpine","El Dorado","Yolo", "Yuba", "San Benito", "Humboldt", "Riverside","Kern","Colusa" ,"Del Norte" ,"Modoc", "Fresno", "Madera", "Santa Clara", "Tehama" ,"San Joaquin" ,"Alameda","Nevada","Butte", "Merced", "Tulare" , "Stanislaus","Orange","Imperial","Sutter", "Amador", "Lake" ,"Plumas" ,"San Mateo", "Siskiyou", "Santa Cruz", "Glenn", "San Luis Obispo"
                               # ))),
                               # create main panel for output
@@ -86,16 +86,16 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                           )),
                  # second tab
                  tabPanel("Life Stage Map",
-                          sidebarLayout(
+                        #  sidebarLayout(
                               # create sidebar panel that will house widgets
-                              sidebarPanel("Adult Tick Distribution and Infection Prevalence"),
+                             # sidebarPanel("Adult Tick Distribution and Infection Prevalence"),
                                            # add radio button group
-                                           #radioButtons(inputId = "species",
-                                             #           label = "Select Life Stage",
-                                             #           choices = c("Chinstrap",
-                                                                   # "Gentoo",
-                                                                    #"Adelie"),
-                                              #          selected = "Chinstrap"),
+                                          # radioButtons(inputId = "Life_Stage",
+                                                       # label = "Select Life Stage",
+                                                      # choices = c("Larvae",
+                                                               #     "Nymph",
+                                                                #    "Adult"),
+                                                       # selected = NULL),
                                            # add checkbox group
                                            #checkboxGroupInput(inputId = "island",
                                                              # label = "Select Counties",
@@ -105,7 +105,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                                                               #elected = "Torgersen")),
                               # create main panel for output
                               mainPanel(tmapOutput(outputId = "tick_map"))
-                 )),
+                 ),
 
                  # third tab
                  tabPanel("Tejon Ticks: Climate and Host Change",
@@ -162,15 +162,18 @@ server <- function(input, output) ({
     })
 
     output$tick_map <- renderTmap({
-      tm_shape(life_stage) +
-        tm_fill(col = "Infection_prevalence",
-                palette = "Greens",
+      tm_shape(life_stage_long) +
+        tm_fill(col = "Infection_prevalence", 
+                palette = "Greens", 
                 title = "Adult tick infection prevalence") +
-        tm_bubbles("Adult",
-                   border.col = "black", border.alpha = .5,
-                   style="fixed",
-                   palette="BuGn", contrast=1,
-                   title.size="Adult tick abundace")
+        tm_bubbles("Count",  col = "Life_Stage",
+                   border.col = "black", border.alpha = .5, 
+                   style="fixed", 
+                   palette="-RdYlBu", contrast=1, 
+                   title.size="Tick abundace") +
+        tm_layout(
+          legend.title.size = 1,
+          legend.text.size = 0.6)
     })
 
     ## Pt 3: Tick Seasonality - I'm not getting this to display and I don't know why
