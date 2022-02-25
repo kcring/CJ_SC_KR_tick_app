@@ -1,0 +1,581 @@
+County,year,incidence
+Alameda,2011,2
+Alameda,2012,4
+Alameda,2013,0
+Alameda,2014,3
+Alameda,2015,11
+Alameda,2016,8
+Alameda,2017,12
+Alameda,2018,4
+Alameda,2019,8
+Alameda,2020,6
+Alpine,2011,0
+Alpine,2012,0
+Alpine,2013,0
+Alpine,2014,0
+Alpine,2015,0
+Alpine,2016,0
+Alpine,2017,0
+Alpine,2018,0
+Alpine,2019,0
+Alpine,2020,0
+Arnador,2011,0
+Arnador,2012,0
+Arnador,2013,1
+Arnador,2014,0
+Arnador,2015,2
+Arnador,2016,0
+Arnador,2017,0
+Arnador,2018,0
+Arnador,2019,0
+Arnador,2020,1
+Butte,2011,0
+Butte,2012,0
+Butte,2013,0
+Butte,2014,1
+Butte,2015,0
+Butte,2016,2
+Butte,2017,0
+Butte,2018,0
+Butte,2019,1
+Butte,2020,0
+Calaveras,2011,0
+Calaveras,2012,0
+Calaveras,2013,0
+Calaveras,2014,0
+Calaveras,2015,1
+Calaveras,2016,0
+Calaveras,2017,1
+Calaveras,2018,0
+Calaveras,2019,1
+Calaveras,2020,0
+Colusa,2011,0
+Colusa,2012,0
+Colusa,2013,0
+Colusa,2014,0
+Colusa,2015,0
+Colusa,2016,0
+Colusa,2017,0
+Colusa,2018,0
+Colusa,2019,0
+Colusa,2020,0
+Contra Costa,2011,1
+Contra Costa,2012,4
+Contra Costa,2013,5
+Contra Costa,2014,2
+Contra Costa,2015,4
+Contra Costa,2016,6
+Contra Costa,2017,12
+Contra Costa,2018,10
+Contra Costa,2019,2
+Contra Costa,2020,2
+Del Norte,2011,0
+Del Norte,2012,0
+Del Norte,2013,0
+Del Norte,2014,0
+Del Norte,2015,0
+Del Norte,2016,0
+Del Norte,2017,0
+Del Norte,2018,0
+Del Norte,2019,0
+Del Norte,2020,0
+El Dorado,2011,0
+El Dorado,2012,2
+El Dorado,2013,0
+El Dorado,2014,2
+El Dorado,2015,2
+El Dorado,2016,1
+El Dorado,2017,2
+El Dorado,2018,0
+El Dorado,2019,0
+El Dorado,2020,0
+Fresno,2011,1
+Fresno,2012,4
+Fresno,2013,0
+Fresno,2014,1
+Fresno,2015,1
+Fresno,2016,1
+Fresno,2017,0
+Fresno,2018,1
+Fresno,2019,1
+Fresno,2020,0
+Glenn,2011,0
+Glenn,2012,0
+Glenn,2013,0
+Glenn,2014,1
+Glenn,2015,0
+Glenn,2016,0
+Glenn,2017,0
+Glenn,2018,0
+Glenn,2019,1
+Glenn,2020,0
+Humboldt,2011,5
+Humboldt,2012,4
+Humboldt,2013,4
+Humboldt,2014,4
+Humboldt,2015,6
+Humboldt,2016,4
+Humboldt,2017,3
+Humboldt,2018,1
+Humboldt,2019,2
+Humboldt,2020,0
+Imperial,2011,0
+Imperial,2012,0
+Imperial,2013,0
+Imperial,2014,0
+Imperial,2015,0
+Imperial,2016,0
+Imperial,2017,0
+Imperial,2018,0
+Imperial,2019,0
+Imperial,2020,0
+Inyo,2011,0
+Inyo,2012,0
+Inyo,2013,0
+Inyo,2014,0
+Inyo,2015,0
+Inyo,2016,0
+Inyo,2017,0
+Inyo,2018,0
+Inyo,2019,0
+Inyo,2020,0
+Kern,2011,0
+Kern,2012,0
+Kern,2013,0
+Kern,2014,0
+Kern,2015,1
+Kern,2016,1
+Kern,2017,0
+Kern,2018,0
+Kern,2019,1
+Kern,2020,0
+Kings,2011,0
+Kings,2012,0
+Kings,2013,1
+Kings,2014,0
+Kings,2015,0
+Kings,2016,1
+Kings,2017,0
+Kings,2018,0
+Kings,2019,0
+Kings,2020,0
+Lake,2011,0
+Lake,2012,0
+Lake,2013,0
+Lake,2014,0
+Lake,2015,1
+Lake,2016,1
+Lake,2017,0
+Lake,2018,0
+Lake,2019,3
+Lake,2020,1
+Lassen,2011,0
+Lassen,2012,0
+Lassen,2013,0
+Lassen,2014,0
+Lassen,2015,0
+Lassen,2016,1
+Lassen,2017,0
+Lassen,2018,0
+Lassen,2019,0
+Lassen,2020,0
+Los Angeles,2011,8
+Los Angeles,2012,2
+Los Angeles,2013,17
+Los Angeles,2014,6
+Los Angeles,2015,6
+Los Angeles,2016,1
+Los Angeles,2017,3
+Los Angeles,2018,2
+Los Angeles,2019,3
+Los Angeles,2020,0
+Madera,2011,1
+Madera,2012,0
+Madera,2013,0
+Madera,2014,0
+Madera,2015,0
+Madera,2016,0
+Madera,2017,0
+Madera,2018,0
+Madera,2019,0
+Madera,2020,1
+Marin,2011,1
+Marin,2012,3
+Marin,2013,6
+Marin,2014,5
+Marin,2015,5
+Marin,2016,3
+Marin,2017,0
+Marin,2018,1
+Marin,2019,8
+Marin,2020,0
+Mariposa,2011,0
+Mariposa,2012,1
+Mariposa,2013,1
+Mariposa,2014,1
+Mariposa,2015,1
+Mariposa,2016,0
+Mariposa,2017,0
+Mariposa,2018,0
+Mariposa,2019,0
+Mariposa,2020,0
+Mendocino,2011,3
+Mendocino,2012,4
+Mendocino,2013,0
+Mendocino,2014,1
+Mendocino,2015,0
+Mendocino,2016,1
+Mendocino,2017,1
+Mendocino,2018,1
+Mendocino,2019,10
+Mendocino,2020,1
+Merced,2011,1
+Merced,2012,0
+Merced,2013,0
+Merced,2014,0
+Merced,2015,0
+Merced,2016,0
+Merced,2017,0
+Merced,2018,0
+Merced,2019,0
+Merced,2020,0
+Modoc,2011,0
+Modoc,2012,0
+Modoc,2013,0
+Modoc,2014,0
+Modoc,2015,0
+Modoc,2016,0
+Modoc,2017,0
+Modoc,2018,0
+Modoc,2019,0
+Modoc,2020,0
+Mono,2011,0
+Mono,2012,0
+Mono,2013,1
+Mono,2014,0
+Mono,2015,0
+Mono,2016,0
+Mono,2017,0
+Mono,2018,0
+Mono,2019,0
+Mono,2020,0
+Monterey,2011,1
+Monterey,2012,1
+Monterey,2013,1
+Monterey,2014,0
+Monterey,2015,0
+Monterey,2016,1
+Monterey,2017,0
+Monterey,2018,0
+Monterey,2019,1
+Monterey,2020,0
+Napa,2011,1
+Napa,2012,1
+Napa,2013,0
+Napa,2014,2
+Napa,2015,2
+Napa,2016,2
+Napa,2017,0
+Napa,2018,1
+Napa,2019,0
+Napa,2020,1
+Nevada,2011,6
+Nevada,2012,2
+Nevada,2013,1
+Nevada,2014,1
+Nevada,2015,1
+Nevada,2016,2
+Nevada,2017,0
+Nevada,2018,2
+Nevada,2019,1
+Nevada,2020,0
+Orange,2011,6
+Orange,2012,0
+Orange,2013,0
+Orange,2014,0
+Orange,2015,0
+Orange,2016,1
+Orange,2017,0
+Orange,2018,0
+Orange,2019,0
+Orange,2020,0
+Placer,2011,1
+Placer,2012,2
+Placer,2013,1
+Placer,2014,0
+Placer,2015,0
+Placer,2016,2
+Placer,2017,3
+Placer,2018,0
+Placer,2019,0
+Placer,2020,0
+Plumas,2011,0
+Plumas,2012,0
+Plumas,2013,0
+Plumas,2014,1
+Plumas,2015,0
+Plumas,2016,0
+Plumas,2017,0
+Plumas,2018,0
+Plumas,2019,0
+Plumas,2020,0
+Riverside,2011,4
+Riverside,2012,0
+Riverside,2013,2
+Riverside,2014,1
+Riverside,2015,1
+Riverside,2016,3
+Riverside,2017,1
+Riverside,2018,1
+Riverside,2019,1
+Riverside,2020,2
+Sacramento,2011,1
+Sacramento,2012,2
+Sacramento,2013,0
+Sacramento,2014,0
+Sacramento,2015,0
+Sacramento,2016,1
+Sacramento,2017,1
+Sacramento,2018,3
+Sacramento,2019,2
+Sacramento,2020,0
+San Benito,2011,0
+San Benito,2012,0
+San Benito,2013,0
+San Benito,2014,0
+San Benito,2015,1
+San Benito,2016,0
+San Benito,2017,0
+San Benito,2018,0
+San Benito,2019,0
+San Benito,2020,0
+San Bernardino,2011,2
+San Bernardino,2012,0
+San Bernardino,2013,1
+San Bernardino,2014,0
+San Bernardino,2015,1
+San Bernardino,2016,0
+San Bernardino,2017,0
+San Bernardino,2018,0
+San Bernardino,2019,2
+San Bernardino,2020,0
+San Diego,2011,8
+San Diego,2012,7
+San Diego,2013,8
+San Diego,2014,8
+San Diego,2015,9
+San Diego,2016,7
+San Diego,2017,1
+San Diego,2018,8
+San Diego,2019,0
+San Diego,2020,2
+San Francisco,2011,1
+San Francisco,2012,2
+San Francisco,2013,5
+San Francisco,2014,0
+San Francisco,2015,0
+San Francisco,2016,0
+San Francisco,2017,11
+San Francisco,2018,14
+San Francisco,2019,10
+San Francisco,2020,3
+San Joaquin,2011,0
+San Joaquin,2012,1
+San Joaquin,2013,0
+San Joaquin,2014,1
+San Joaquin,2015,0
+San Joaquin,2016,1
+San Joaquin,2017,0
+San Joaquin,2018,1
+San Joaquin,2019,3
+San Joaquin,2020,0
+San Luis Obispo,2011,0
+San Luis Obispo,2012,1
+San Luis Obispo,2013,5
+San Luis Obispo,2014,3
+San Luis Obispo,2015,3
+San Luis Obispo,2016,1
+San Luis Obispo,2017,1
+San Luis Obispo,2018,1
+San Luis Obispo,2019,3
+San Luis Obispo,2020,2
+San Mateo,2011,0
+San Mateo,2012,1
+San Mateo,2013,3
+San Mateo,2014,6
+San Mateo,2015,5
+San Mateo,2016,5
+San Mateo,2017,4
+San Mateo,2018,0
+San Mateo,2019,2
+San Mateo,2020,1
+Santa Barbara,2011,3
+Santa Barbara,2012,0
+Santa Barbara,2013,6
+Santa Barbara,2014,0
+Santa Barbara,2015,4
+Santa Barbara,2016,8
+Santa Barbara,2017,3
+Santa Barbara,2018,3
+Santa Barbara,2019,2
+Santa Barbara,2020,1
+Santa Clara,2011,11
+Santa Clara,2012,4
+Santa Clara,2013,13
+Santa Clara,2014,5
+Santa Clara,2015,10
+Santa Clara,2016,11
+Santa Clara,2017,7
+Santa Clara,2018,5
+Santa Clara,2019,2
+Santa Clara,2020,3
+Santa Cruz,2011,8
+Santa Cruz,2012,5
+Santa Cruz,2013,5
+Santa Cruz,2014,6
+Santa Cruz,2015,8
+Santa Cruz,2016,7
+Santa Cruz,2017,15
+Santa Cruz,2018,10
+Santa Cruz,2019,11
+Santa Cruz,2020,3
+Shasta,2011,1
+Shasta,2012,1
+Shasta,2013,0
+Shasta,2014,0
+Shasta,2015,0
+Shasta,2016,0
+Shasta,2017,0
+Shasta,2018,0
+Shasta,2019,0
+Shasta,2020,1
+Sierra,2011,0
+Sierra,2012,1
+Sierra,2013,0
+Sierra,2014,0
+Sierra,2015,0
+Sierra,2016,0
+Sierra,2017,0
+Sierra,2018,1
+Sierra,2019,0
+Sierra,2020,0
+Siskiyou,2011,0
+Siskiyou,2012,1
+Siskiyou,2013,1
+Siskiyou,2014,0
+Siskiyou,2015,1
+Siskiyou,2016,1
+Siskiyou,2017,1
+Siskiyou,2018,1
+Siskiyou,2019,0
+Siskiyou,2020,0
+Solano,2011,0
+Solano,2012,0
+Solano,2013,0
+Solano,2014,0
+Solano,2015,0
+Solano,2016,3
+Solano,2017,2
+Solano,2018,2
+Solano,2019,0
+Solano,2020,1
+Sonoma,2011,6
+Sonoma,2012,12
+Sonoma,2013,7
+Sonoma,2014,11
+Sonoma,2015,12
+Sonoma,2016,11
+Sonoma,2017,8
+Sonoma,2018,8
+Sonoma,2019,5
+Sonoma,2020,0
+Stanislaus,2011,0
+Stanislaus,2012,0
+Stanislaus,2013,0
+Stanislaus,2014,0
+Stanislaus,2015,1
+Stanislaus,2016,1
+Stanislaus,2017,3
+Stanislaus,2018,2
+Stanislaus,2019,0
+Stanislaus,2020,0
+Sutter,2011,0
+Sutter,2012,0
+Sutter,2013,0
+Sutter,2014,0
+Sutter,2015,0
+Sutter,2016,0
+Sutter,2017,0
+Sutter,2018,0
+Sutter,2019,0
+Sutter,2020,0
+Tehama,2011,0
+Tehama,2012,0
+Tehama,2013,0
+Tehama,2014,0
+Tehama,2015,0
+Tehama,2016,3
+Tehama,2017,1
+Tehama,2018,0
+Tehama,2019,0
+Tehama,2020,0
+Trinity,2011,2
+Trinity,2012,1
+Trinity,2013,0
+Trinity,2014,1
+Trinity,2015,0
+Trinity,2016,0
+Trinity,2017,0
+Trinity,2018,0
+Trinity,2019,0
+Trinity,2020,0
+Tulare,2011,0
+Tulare,2012,1
+Tulare,2013,0
+Tulare,2014,0
+Tulare,2015,1
+Tulare,2016,1
+Tulare,2017,0
+Tulare,2018,0
+Tulare,2019,4
+Tulare,2020,0
+Tuolumne,2011,0
+Tuolumne,2012,0
+Tuolumne,2013,0
+Tuolumne,2014,0
+Tuolumne,2015,1
+Tuolumne,2016,0
+Tuolumne,2017,0
+Tuolumne,2018,0
+Tuolumne,2019,1
+Tuolumne,2020,0
+Ventura,2011,0
+Ventura,2012,3
+Ventura,2013,2
+Ventura,2014,0
+Ventura,2015,0
+Ventura,2016,3
+Ventura,2017,3
+Ventura,2018,2
+Ventura,2019,2
+Ventura,2020,0
+Yolo,2011,0
+Yolo,2012,1
+Yolo,2013,1
+Yolo,2014,0
+Yolo,2015,1
+Yolo,2016,1
+Yolo,2017,3
+Yolo,2018,0
+Yolo,2019,0
+Yolo,2020,0
+Yuba,2011,0
+Yuba,2012,2
+Yuba,2013,0
+Yuba,2014,1
+Yuba,2015,0
+Yuba,2016,0
+Yuba,2017,0
+Yuba,2018,0
+Yuba,2019,0
+Yuba,2020,1

@@ -1,0 +1,403 @@
+---
+title: "Ca_tick_map"
+author: "Kacie Ring"
+date: "2/21/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(broom)
+library(dplyr)
+
+# Spatial data packages
+library(sf)
+library(tmap)#package for interactive mapping 
+
+tick <- read_csv(here("tickBb", "I.pacificus_data.csv"))
+
+
+Bb <- read_csv(here("tickBb", "Bb.csv"))
+
+```
+
+```{r}
+
+tick_clean <- tick %>% 
+mutate(County = recode(County,
+"Alameda County" = "Alameda", 
+"Alpine County" = "Alpine",
+"Amador County" = "Amador", 
+"Butte County" = "Butte", 
+"Calaveras County" = "Calaveras", 
+"Colusa County" = "Colusa",
+"Contra Costa County" = "Contra Costa", 
+"Del Norte County" = "Del Norte", 
+"El Dorado County" = "El Dorado", 
+"Fresno County" = "Fresno", 
+"Glenn County" = "Glenn", 
+"Humbolt County" = "Humboldt", 
+"Imperial County" = "Imperial", 
+"Inyo County" = "Inyo", 
+"Kern County" = 'Kern', 
+"Kings County" = "Kings", 
+"Lake County" = "Lake", 
+"Lassen County" = "Lassen", 
+"Los Angeles County" = "Los Angeles", 
+"Madera County" = "Madera", 
+"Marin County" = "Marin", 
+"Mariposa County" = 'Mariposa', 
+"Mendocino County" = 'Mendocino', 
+"Merced County" = 'Merced', 
+"Modoc County" = 'Modoc', 
+"Mono County" = 'Mono', 
+"Monterey County" = 'Monterey', 
+"Napa County" = 'Napa',
+"Nevada County" = 'Nevada',
+"Orange County" = 'Orange', 
+"Placer County" = 'Placer', 
+"Plumas County" = 'Plumas', 
+"Riverside County" = 'Riverside', 
+"Sacramento County" = 'Sacramento', 
+"San Benito County" = 'San Benito', 
+"San Bernardino County" = 'San Bernardino',
+"San Diego County" = 'San Diego', 
+"San Francisco County" = 'San Francisco', 
+"San Joaquin County" = 'San Joaquin', 
+"San Luis Obispo County"  = 'San Luis Obispo', 
+'San Mateo County'= 'San Mateo', 
+'Santa Barbara County' = 'Santa Barbara', 
+'Santa Clara County' = 'Santa Clara', 
+'Santa Cruz County' = 'Santa Cruz', 
+'Shasta County' = 'Shasta', 
+'Sierra County' = 'Sierra', 
+'Siskiyou County' = 'Siskiyou', 
+'Solano County' = 'Solano', 
+'Sonoma County' = 'Sonoma', 
+'Stanislaus County' = 'Stanislaus', 
+'Sutter County' = 'Sutter', 
+'Tehama County' = 'Tehama', 
+'Trinity County' = 'Trinity', 
+'Tulare County' = 'Tulare', 
+'Tuolumne County' = 'Tuolumne', 
+'Ventura County' = 'Ventura', 
+'Yolo County' = 'Yolo'))
+
+View(tick_clean)
+
+tick_2020 <- tick_clean %>%
+  filter(Year == 2020)
+
+
+```
+
+```{r}
+
+bb_clean <- Bb %>% 
+mutate(County = recode(County,
+"Alameda County" = "Alameda", 
+"Alpine County" = "Alpine",
+"Amador County" = "Amador", 
+"Butte County" = "Butte", 
+"Calaveras County" = "Calaveras", 
+"Colusa County" = "Colusa",
+"Contra Costa County" = "Contra Costa", 
+"Del Norte County" = "Del Norte", 
+"El Dorado County" = "El Dorado", 
+"Fresno County" = "Fresno", 
+"Glenn County" = "Glenn", 
+"Humbolt County" = "Humboldt", 
+"Imperial County" = "Imperial", 
+"Inyo County" = "Inyo", 
+"Kern County" = 'Kern', 
+"Kings County" = "Kings", 
+"Lake County" = "Lake", 
+"Lassen County" = "Lassen", 
+"Los Angeles County" = "Los Angeles", 
+"Madera County" = "Madera", 
+"Marin County" = "Marin", 
+"Mariposa County" = 'Mariposa', 
+"Mendocino County" = 'Mendocino', 
+"Merced County" = 'Merced', 
+"Modoc County" = 'Modoc', 
+"Mono County" = 'Mono', 
+"Monterey County" = 'Monterey', 
+"Napa County" = 'Napa',
+"Nevada County" = 'Nevada',
+"Orange County" = 'Orange', 
+"Placer County" = 'Placer', 
+"Plumas County" = 'Plumas', 
+"Riverside County" = 'Riverside', 
+"Sacramento County" = 'Sacramento', 
+"San Benito County" = 'San Benito', 
+"San Bernardino County" = 'San Bernardino',
+"San Diego County" = 'San Diego', 
+"San Francisco County" = 'San Francisco', 
+"San Joaquin County" = 'San Joaquin', 
+"San Luis Obispo County"  = 'San Luis Obispo', 
+'San Mateo County'= 'San Mateo', 
+'Santa Barbara County' = 'Santa Barbara', 
+'Santa Clara County' = 'Santa Clara', 
+'Santa Cruz County' = 'Santa Cruz', 
+'Shasta County' = 'Shasta', 
+'Sierra County' = 'Sierra', 
+'Siskiyou County' = 'Siskiyou', 
+'Solano County' = 'Solano', 
+'Sonoma County' = 'Sonoma', 
+'Stanislaus County' = 'Stanislaus', 
+'Sutter County' = 'Sutter', 
+'Tehama County' = 'Tehama', 
+'Trinity County' = 'Trinity', 
+'Tulare County' = 'Tulare', 
+'Tuolumne County' = 'Tuolumne', 
+'Ventura County' = 'Ventura', 
+'Yolo County' = 'Yolo'))
+
+
+```
+
+
+```{r}
+
+tick_bb <- inner_join(tick_2020, bb_clean)
+
+
+```
+
+
+
+```{r}
+ca_counties_sf <- read_sf(here("ca_counties", "CA_Counties_TIGER2016.shp"))
+```
+
+```{r}
+
+ca_subset_sf <- ca_counties_sf %>% #sf = simple features object
+  janitor::clean_names() %>%
+  select(County= name, land_area = aland) #sf files have a sticky geometry (aka it automatically stays in the object)
+
+head(ca_subset_sf) ### WARN AGAINST View()
+
+
+
+
+```
+
+
+```{r}
+ca_subset_sf %>% st_crs()
+ca_subset_sf %>% raster::crs() ### to show proj4 string
+
+#look for the epsg for crs
+
+```
+
+
+
+```{r}
+
+ggplot(data = ca_subset_sf) +
+  geom_sf(aes(fill = Ixodes_pacificus_county_status), color = "white", size = 0.1) +  #do not need to specify x and y 
+  #land area column, color would be boundary of polygon, size isthickness of line 
+  theme_void() #
+ 
+ggplot(data = ca_subset_sf) +
+  geom_sf(aes(fill = Bb_county_Status), color = "white", size = 0.1) +  #do not need to specify x and y 
+  #land area column, color would be boundary of polygon, size isthickness of line 
+  theme_void() #
+
+```
+
+
+
+Human Lyme disease incidence graphs 
+
+```{r}
+
+lyme <- read_csv("human_lyme_incidence.csv")
+
+
+#fileter counties with Lyme prevalence 
+
+pos_county_time <- lyme %>% 
+  select(-last_col())%>%
+   filter(!row_number() %in% c(59:61)) %>%
+  select(-TOTAL) %>%
+    select(-last_col())
+
+
+long<- pos_county_time  %>% 
+ pivot_longer(!County,
+    names_to = "year",
+    values_to = "incidence") %>% 
+    group_by(County) 
+ 
+ggplot(long, aes(year, incidence, group = 1, color = County)) +
+         geom_point() +
+         geom_line() +
+         labs(x = "Year", y = "Lyme Disease Incidence") 
+              #title = "Motor vehicle emissions in Baltimore")
+
+tick_graph <- 
+  ggplot(data = long, aes(x = year, y = incidence, group = County)) +
+  geom_line(aes(color = County)) +
+  labs(x = "Year", y = "Lyme Disease Incidence", title = "Human Lyme Disease Incidence 2011-2020") 
+  theme_minimal()
+
+ggplotly(tick_graph)
+
+```
+
+```{r}
+
+top_pos_county_time <- lyme %>% 
+  select(-last_col())%>%
+  filter(!row_number() %in% c(59:61)) %>%
+  filter(TOTAL > 30) %>%
+  select(-TOTAL) %>%
+  select(-last_col())
+
+
+long_top<- top_pos_county_time  %>% 
+ pivot_longer(!County,
+    names_to = "year",
+    values_to = "incidence") %>% 
+    group_by(County) 
+ 
+ggplot(long_top, aes(year, incidence, group = 1, color = County)) +
+         geom_point() +
+         geom_line() +
+         labs(x = "Year", y = "Lyme Disease Incidence") 
+              #title = "Motor vehicle emissions in Baltimore")
+
+tick_graph_top <- 
+  ggplot(data = long_top, aes(x = year, y = incidence, group = County)) +
+  geom_line(aes(color = County)) +
+  labs(x = "Year", y = "Lyme Disease Incidence", title = "Human Lyme Disease Incidence 2011-2020 - Top 5 CA Counties") 
+  theme_minimal()
+
+ggplotly(tick_graph_top)
+
+```
+
+
+```{r}
+
+ca_subset_sf
+
+incidence_map <- lyme %>% 
+  select(-last_col())%>%
+   filter(!row_number() %in% c(59:61))  %>% 
+  rename(incidence = "Incidence/100000")
+
+
+incidence <- inner_join(ca_subset_sf, incidence_map)
+
+
+
+
+
+ggplot(data = incidence) +
+  geom_sf(aes(fill = incidence), color = "white", size = 0.1) +
+  scale_fill_gradientn(colors = c("snow2","darkolivegreen1","chartreuse2","chartreuse4")) +
+  theme_minimal() +
+  labs(fill = "Human Lyme incidence per 100000 individuals")
+
+
+```
+
+```{r}
+# Set the viewing mode to "interactive":
+tmap_mode(mode = "view")
+
+# Then make a map (with the polygon fill color updated by variable 'land_area', updating the color palette to "BuGn"), then add another shape layer for the sesbania records (added as dots):
+tm_shape(incidence) +
+  tm_fill("incidence", palette = "BuGn") 
+
+```
+
+
+
+```{r}
+
+reserve_ticks <- read_csv("occurence_points_ucnrs.csv")
+View(reserve_ticks)
+
+reserve_ticks$reserve <- as.factor(reserve_ticks$reserve)
+
+SB_reserves <- reserve_ticks %>%
+  filter(reserve == "Sedgewick", "Santa_Cruz_Island", "Coil_Oil_Point")
+
+ca_crs <-st_crs(ca_subset_sf)
+
+reserves_shp <- st_as_sf(reserve_ticks, coords = c("lat", "lon"), crs = ca_crs)
+
+
+reserve_SB <- incidence %>%
+  filter(County == "Santa Barbara")
+
+
+
+
+```
+
+
+```{r}
+tick_stage <- read_csv("tick_life_stage_by_county.csv")
+
+tick_stage_map <- tick_stage %>%
+  select(c(1:5, 8)) 
+
+tick_stage$Nymph <- as.numeric(tick_stage$Nymph)
+tick_stage$Larvae <- as.numeric(tick_stage$Larvae)
+
+tick_stage_long <- tick_stage %>% 
+  as.data.frame() %>% 
+  pivot_longer(cols = Adult:Larvae, names_to = "Life_Stage", values_to = "Count")
+
+life_stage <- inner_join(ca_subset_sf, tick_stage_map)
+life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
+
+View(life_stage)
+ggplot(data = life_stage) +
+  geom_sf(aes(fill = Infection_prevalence), color = "white", size = 0.1) +
+  scale_fill_gradientn(colors = c("snow2","darkolivegreen1","chartreuse2","chartreuse4")) +
+  theme_minimal() +
+  labs(fill = "Tick Infection Prevalence")
+
+
+```
+
+
+```{r}
+
+tm_shape(life_stage) +
+   tm_fill(col = "Infection_prevalence", 
+           palette = "Greens", 
+           title = "Adult tick infection prevalence") +
+    tm_bubbles("Adult",  
+               border.col = "black", border.alpha = .5, 
+               style="fixed", 
+               palette="-RdYlBu", contrast=1, 
+               title.size="Adult tick abundace") +
+ tm_layout(legend.outside = TRUE) 
+
+
+
+
+tm_shape(life_stage_long) +
+   tm_fill(col = "Infection_prevalence", 
+           palette = "Greens", 
+           title = "Adult tick infection prevalence") +
+    tm_bubbles("Life_Stage",  col = "Count",
+               border.col = "black", border.alpha = .5, 
+               style="fixed", 
+               palette="-RdYlBu", contrast=1, 
+               title.size="Adult tick abundace") +
+ tm_layout(legend.outside = TRUE) 
+
+```
+
