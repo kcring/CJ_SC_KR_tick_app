@@ -171,6 +171,8 @@ tick_bb <- inner_join(tick_2020, bb_clean)
 
 ```{r}
 ca_counties_sf <- read_sf(here("ca_counties", "CA_Counties_TIGER2016.shp"))
+
+
 ```
 
 ```{r}
