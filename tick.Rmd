@@ -363,7 +363,7 @@ tick_stage_long <- tick_stage %>%
 life_stage <- inner_join(ca_subset_sf, tick_stage_map)
 life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
-View(life_stage)
+View(life_stage_long)
 ggplot(data = life_stage) +
   geom_sf(aes(fill = Infection_prevalence), color = "white", size = 0.1) +
   scale_fill_gradientn(colors = c("snow2","darkolivegreen1","chartreuse2","chartreuse4")) +
@@ -384,8 +384,7 @@ tm_shape(life_stage) +
                border.col = "black", border.alpha = .5, 
                style="fixed", 
                palette="-RdYlBu", contrast=1, 
-               title.size="Adult tick abundace") +
- tm_layout(legend.outside = TRUE) 
+               title.size="Adult tick abundace")
 
 
 
@@ -394,12 +393,16 @@ tm_shape(life_stage_long) +
    tm_fill(col = "Infection_prevalence", 
            palette = "Greens", 
            title = "Adult tick infection prevalence") +
-    tm_bubbles("Life_Stage",  col = "Count",
+    tm_bubbles("Count",  col = "Life_Stage",
                border.col = "black", border.alpha = .5, 
                style="fixed", 
                palette="-RdYlBu", contrast=1, 
-               title.size="Adult tick abundace") +
- tm_layout(legend.outside = TRUE) 
+               title.size="Tick abundace") +
+    tm_layout(
+          legend.title.size = 1,
+          legend.text.size = 0.6)
+
+                
 
 ```
 
