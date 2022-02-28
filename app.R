@@ -18,8 +18,11 @@ library(plotly)
 library(ggthemes)
 library(tmap)
 library(sf)
+library(leaflet)
 
 #penguins <- penguins
+
+pt_coords <- reactiveVal()
 
 long <- read_csv("long.csv")
 tick_graph <-
@@ -182,7 +185,7 @@ server <- function(input, output) ({
             select(year, month, site, plot, total, deoc, ipac, deva, other) %>%
             group_by(across(all_of(group_cols))) %>%
             summarize(n = n()) %>%
-            filter(month == input$month)# end tejon reactive
+            filter(month == input$month) # end tejon reactive
     })
 
     #tejon_tick_app_2 <- reactive({
