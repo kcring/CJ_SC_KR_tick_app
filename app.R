@@ -60,6 +60,13 @@ ticks <- read_csv("Tejon_MixedModels_Dataset.csv")
 ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  # title
                  "Tick, Tick, Boom: Tick population (Family Acari) distributions in California",
+                 # intro tab
+                 tabPanel("About",
+                          sidebarLayout(
+                            sidebarPanel("AAA"), 
+                            mainPanel()
+                          )),
+                 
                  # first tab
                  tabPanel("Human Lyme Disease",
                           sidebarLayout(
