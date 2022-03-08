@@ -67,6 +67,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                             mainPanel(
                               h1("First level title"),
                               img(src = "tick_picture.png", height = 443, width = 591),
+                              h5("Image Credit: James Gathany/CDC via AP"),
                               h4("Fourth level text")
                             )
                           )),
