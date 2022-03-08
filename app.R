@@ -66,7 +66,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                             sidebarPanel("About This Project"), 
                             mainPanel(
                               h1("First level title"),
-                              img(src = "tick_picture.webp", height = 140, width = 140),
+                              img(src = "tick_picture.png", height = 140, width = 140),
                               h4("Fourth level text")
                             )
                           )),
