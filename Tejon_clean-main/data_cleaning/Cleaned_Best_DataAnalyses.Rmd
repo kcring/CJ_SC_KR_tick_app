@@ -1,0 +1,20 @@
+---
+title: "Cleaned and best fit analyses"
+author: "sbsambado"
+date: "10/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readr)
+library(dplyr)
+library(car)
+library(lme4)
+library(kableExtra)
+library(jtools)
+library(effects)
+
+```

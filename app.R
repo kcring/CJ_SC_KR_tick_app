@@ -54,7 +54,10 @@ life_stage <- inner_join(ca_subset_sf, tick_stage_map)
 
 ## tab 3 data
 
-ticks <- read_csv("Tejon_MixedModels_Dataset.csv")
+Tick <- read_csv("Tejon_clean-main/data_visualizations/Viz_Tejon_MeanComparisons_Dataset.csv")
+
+# omit 0s to make plots 
+Tick_no0 <- Tick[which(Tick$total != 0),]
 
 # Create the user interface:
 # using navbarPage() to setup tabs
@@ -153,11 +156,12 @@ server <- function(input, output) ({
     }) #end climate_select reactive
     
     output$climate_plot <- renderPlot({
-      ggplot(data = climate_select(), aes(x = site, y = total, fill = plot)) +
-        geom_bar(stat = "identity", position = "dodge")+
-        #geom_jitter(alpha = .15, width = .2, size = 3)+
-        scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
-        theme_bw()
+      ggplot(Tick_no0, aes(x = site, y = log(total + 1), fill = plot))+
+        geom_bar(position = "dodge", stat = "identity")+
+        #geom_point(alpha = .15)+
+        theme_bw() +
+        labs(x = 'Site', y = "Log of tick counts (2016 - 2019)", fill = 'Plot') +
+        scale_fill_manual(values =c('darkseagreen1','darkseagreen3','darkseagreen4'))
     })
 
 
