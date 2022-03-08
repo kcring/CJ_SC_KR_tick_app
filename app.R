@@ -63,10 +63,14 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  # intro tab
                  tabPanel("About",
                           sidebarLayout(
-                            sidebarPanel("About This Project"), 
+                            sidebarPanel(h4("App Authors"), 
+                                         p("Kacie Ring, 
+                                            Stephanie Copeland, 
+                                            Conner Jainese")), 
                             mainPanel(
                               h1("First level title"),
-                              img(src = "tick_picture.png", height = 443, width = 591),
+                              img(src = "tick_picture.png", 
+                                  height = 443, width = 591),
                               h5("Image Credit: James Gathany/CDC via AP"),
                               h4("Fourth level text")
                             )
