@@ -64,7 +64,10 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  tabPanel("About",
                           sidebarLayout(
                             sidebarPanel("About This Project"), 
-                            mainPanel()
+                            mainPanel(
+                              h1("First level title"), 
+                              h4("Fourth level text")
+                            )
                           )),
                  # first tab
                  tabPanel("Human Lyme Disease",
