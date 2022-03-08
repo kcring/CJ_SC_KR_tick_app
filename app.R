@@ -63,7 +63,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  # intro tab
                  tabPanel("About",
                           sidebarLayout(
-                            sidebarPanel("AAA"), 
+                            sidebarPanel("About This Project"), 
                             mainPanel()
                           )),
                  # first tab
