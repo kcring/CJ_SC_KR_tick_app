@@ -19,7 +19,6 @@ library(ggthemes)
 library(tmap)
 library(sf)
 
-#penguins <- penguins
 
 long <- read_csv("long.csv")
 tick_graph <-
