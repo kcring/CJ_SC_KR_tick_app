@@ -66,7 +66,6 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                             sidebarPanel("AAA"), 
                             mainPanel()
                           )),
-                 
                  # first tab
                  tabPanel("Human Lyme Disease",
                           sidebarLayout(
