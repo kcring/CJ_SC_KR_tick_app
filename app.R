@@ -68,10 +68,10 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                                             Stephanie Copeland, 
                                             Conner Jainese")), 
                             mainPanel(
-                              h1("First level title"),
+                              h2("An Exploration of Tick Dynamics in California"),
                               img(src = "tick_picture.png", 
                                   height = 443, width = 591),
-                              h5("Image Credit: James Gathany/CDC via AP"),
+                              p("Image Credit: James Gathany/CDC via AP"),
                               h4("Fourth level text")
                             )
                           )),
