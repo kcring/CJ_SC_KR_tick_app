@@ -47,9 +47,17 @@ incidence <- inner_join(ca_subset_sf, incidence_map)
 tick_stage <- read_csv("tick_life_stage_by_county.csv")
 
 tick_stage_map <- tick_stage %>%
-  select(c(1:5, 8))
+  select(c(1:5, 8)) 
+
+tick_stage$Nymph <- as.numeric(tick_stage$Nymph)
+tick_stage$Larvae <- as.numeric(tick_stage$Larvae)
+
+tick_stage_long <- tick_stage %>% 
+  as.data.frame() %>% 
+  pivot_longer(cols = Adult:Larvae, names_to = "Life_Stage", values_to = "Count")
 
 life_stage <- inner_join(ca_subset_sf, tick_stage_map)
+life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
 ## tab 3 data
 
