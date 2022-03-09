@@ -20,7 +20,6 @@ library(tmap)
 library(sf)
 library(leaflet)
 
-#penguins <- penguins
 
 pt_coords <- reactiveVal()
 
@@ -51,27 +50,42 @@ incidence <- inner_join(ca_subset_sf, incidence_map)
 tick_stage <- read_csv("tick_life_stage_by_county.csv")
 
 tick_stage_map <- tick_stage %>%
-  select(c(1:5, 8))
+  select(c(1:5, 8)) 
+
+tick_stage$Nymph <- as.numeric(tick_stage$Nymph)
+tick_stage$Larvae <- as.numeric(tick_stage$Larvae)
+
+tick_stage_long <- tick_stage %>% 
+  as.data.frame() %>% 
+  pivot_longer(cols = Adult:Larvae, names_to = "Life_Stage", values_to = "Count")
 
 life_stage <- inner_join(ca_subset_sf, tick_stage_map)
-## Tejon Data and Organization
-tejon_tick_2 <- read_csv("Tejon_MixedModels_Dataset.csv")
+life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
-Full_no0 <- tejon_tick_2[which(tejon_tick_2$log_total != 0),]
+## tab 3 data
 
-
-
-#tejon_tick_app_2 <- Full_no0 %>%
-#select(year, month, site, plot, total, deoc, ipac, deva, other) %>%
-#group_by(across(all_of(group_cols))) %>%
-#summarize(n = n())
-
+ticks <- read_csv("Tejon_MixedModels_Dataset.csv")
 
 # Create the user interface:
 # using navbarPage() to setup tabs
 ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  # title
                  "Tick, Tick, Boom: Tick population (Family Acari) distributions in California",
+                 # intro tab
+                 tabPanel("About",
+                          sidebarLayout(
+                            sidebarPanel(h4("App Authors"), 
+                                         p("Kacie Ring, 
+                                            Stephanie Copeland, 
+                                            Conner Jainese")), 
+                            mainPanel(
+                              h2("An Exploration of Tick Dynamics in California"),
+                              img(src = "tick_picture.png", 
+                                  height = 443, width = 591),
+                              p("Image Credit: James Gathany/CDC via AP"),
+                              h4("Fourth level text")
+                            )
+                          )),
                  # first tab
                  tabPanel("Human Lyme Disease",
                           sidebarLayout(
@@ -110,39 +124,17 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                               mainPanel(tmapOutput(outputId = "tick_map"))
                  ),
 
-                 # third tab
-                 tabPanel("Tejon Ticks: Climate and Host Change",
-                          sidebarLayout(
-                              # create sidebar panel that will house widgets
-                              sidebarPanel("Time of Year and Exclosure Effects",
-                                           # add checkbox group
-                                           checkboxGroupInput(inputId = "month",
-                                                              label = "Select Month",
-                                                              choices = c("January",
-                                                                          "February",
-                                                                          "March",
-                                                                          "April",
-                                                                          "May",
-                                                                          "June",
-                                                                          "July",
-                                                                          "August",
-                                                                          "September",
-                                                                          "October",
-                                                                          "November",
-                                                                          "December"),
-                                                              selected = NULL),
-                                           # add checkbox group #2
-                                           checkboxGroupInput(inputId = "plot",
-                                                              label = "Select Exclusion Treatment",
-                                                              choices = c("Total", "Partial", "Control"),
-                                                              selected = NULL)
-                              ),
-                              # create main panel for output
-                              mainPanel("Graph/Map 3 Here",
-                                        plotOutput(outputId = "tejon_tick"))
-                          )))
-
-
+                 # third tab 
+                tabPanel("Effects of Climate and Herbivore Loss on Tick Abundance",
+                sidebarLayout(
+                  sidebarPanel(NULL,
+                               radioButtons(inputId = "ticks_site",
+                                        label = "Choose Climate Treatment",
+                                        choices = c("Arid", "Intermediate", "Mesic"))), #end sidebar panel
+                  mainPanel(NULL,
+                            plotOutput(outputId = "climate_plot")) #end tab3Panel
+                )))
+                
 # Create the server function:
 server <- function(input, output) ({
     ##Pt.1 Lyme incidence
@@ -179,26 +171,22 @@ server <- function(input, output) ({
           legend.text.size = 0.6)
     })
 
-    ## Pt 3: Tick Seasonality - I'm not getting this to display and I don't know why
-    tejon_tick_app_3 <- reactive({
-        Full_no0 %>%
-            select(year, month, site, plot, total, deoc, ipac, deva, other) %>%
-            group_by(across(all_of(group_cols))) %>%
-            summarize(n = n()) %>%
-            filter(month == input$month) # end tejon reactive
+
+      
+    ## Pt 3: Tick Seasonality 
+    climate_select <- reactive({
+      ticks %>%
+        filter(site == input$ticks_site)
+    }) #end climate_select reactive
+    
+    output$climate_plot <- renderPlot({
+      ggplot(data = climate_select(), aes(x = site, y = total, fill = plot)) +
+        geom_bar(stat = "identity", position = "dodge")+
+        #geom_jitter(alpha = .15, width = .2, size = 3)+
+        scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+        theme_bw()
+
     })
-
-    #tejon_tick_app_2 <- reactive({
-    #tejon_tick_app_2 %>%
-    #filter(month == input$month) #%>%
-    #filter(plot == input$plot)
-
-    #end tejon reactive
-
-    output$tejon_tick <- renderPlot({
-        ggplot(data = tejon_tick_app_3(), aes(x = plot, y = n))+
-            geom_bar(stat = "identity")+
-            theme_bw()})
 
 
 })
