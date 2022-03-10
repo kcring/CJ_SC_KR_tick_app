@@ -83,7 +83,10 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                               img(src = "tick_picture.png", 
                                   height = 443, width = 591),
                               p("Image Credit: James Gathany/CDC via AP"),
-                              h4("Fourth level text")
+                              h4("Project Summaries"),
+                              h5("Human Lyme Disease"), #put project summary after this heading
+                              h5("Tick Life Stage Distribution in CA"), #put project summary after this heading
+                              h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance") #put project summary after this heading
                             )
                           )),
                  # first tab
@@ -125,8 +128,8 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  ),
 
                  # third tab 
-                tabPanel("Case Study: Tick Abundance in South-Central CA",
-                         sidebarLayout(
+                tabPanel("Case Study",
+                         sidebarLayout(position = "right",
                            # create sidebar panel that will house widgets
                            sidebarPanel(NULL,
                                         # add radiobutton group
@@ -134,8 +137,10 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                                                      label = "Select climate",
                                                      choices = c("Arid", "Intermediate", "Mesic"))),
                            # create main panel for output
-                           mainPanel("Tick Abundance by Climate Type and Herbivore Treatment",
-                                     plotOutput(outputId = "climate_plot")))))
+                           mainPanel(h4("Tick Abundance at the Tejon Ranch Exclosure Experiment (TREE)."),
+                             h5("Tick Abundance by Climate Type and Herbivore Treatment"),
+                                     plotOutput(outputId = "climate_plot")
+                                     ))))
                 
 # Create the server function:
 server <- function(input, output) ({
@@ -183,9 +188,11 @@ server <- function(input, output) ({
     
     output$climate_plot <- renderPlot({
       
-      ggplot(data = climate_select(), aes(x = site, y = total, fill = plot)) +
+      ggplot(data = climate_select(), aes(x = site, y = log(total), fill = plot)) +
         geom_bar(stat = "identity", position = "dodge") +
         scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+        scale_y_continuous(breaks = seq(0,5, by =1), limits = c(0,5))+
+        labs(x = 'Climate Zone', y = 'Log(total) Ticks 2016-2019')+
         theme_bw()
     })
     
