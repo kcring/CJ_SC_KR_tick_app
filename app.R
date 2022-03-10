@@ -125,7 +125,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  ),
 
                  # third tab 
-                tabPanel("Case Study: Tick Abundance in South-Central CA"),
+                tabPanel("Case Study: Tick Abundance in South-Central CA",
                          sidebarLayout(
                            # create sidebar panel that will house widgets
                            sidebarPanel(NULL,
@@ -135,7 +135,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                                                      choices = c("Arid", "Intermediate", "Mesic"))),
                            # create main panel for output
                            mainPanel("Tick Abundance by Climate Type and Herbivore Treatment",
-                                     plotOutput(outputId = "climate_plot"))))
+                                     plotOutput(outputId = "climate_plot")))))
                 
 # Create the server function:
 server <- function(input, output) ({
