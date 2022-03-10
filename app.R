@@ -86,7 +86,8 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                               h4("Project Summaries"),
                               h5("Human Lyme Disease"), #put project summary after this heading
                               h5("Tick Life Stage Distribution in CA"), #put project summary after this heading
-                              h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance") #put project summary after this heading
+                              h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance"), #put project summary after this heading
+                              p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27 1ha plots, initiated in 2016 to understand the ecological effects of shifting wildlife and livestock assemblages across varying climates. The 27 experimental plots spanned three aridity levels, and each level included three replicate randomized blocks. Each block contained three treatment levels of large herbivores – a) no wild ungulates or livestock (total exclosure) which functionally excluded all large herbivores over 40 kg body mass, b) wild ungulates only (partial exclosure), and c) both wildlife + livestock (open). The unique life cycle of ticks consisting of an on-host and off host (susceptible to environmental variables) stages makes them particularly sensitive to the interactive effects of changing climate and herbivory in ecosystems.")
                             )
                           )),
                  # first tab
@@ -139,7 +140,11 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                            # create main panel for output
                            mainPanel(h4("Tick Abundance at the Tejon Ranch Exclosure Experiment (TREE)."),
                              h5("Tick Abundance by Climate Type and Herbivore Treatment"),
-                                     plotOutput(outputId = "climate_plot")
+                                     plotOutput(outputId = "climate_plot"),
+                             h5("TREE Study Design Visual"),
+                             img(src = "Tejon.png",
+                                 height = 443, width = 750),
+                             p("SJArt")
                                      ))))
                 
 # Create the server function:
