@@ -19,7 +19,6 @@ library(ggthemes)
 library(tmap)
 library(sf)
 
-#penguins <- penguins
 
 long <- read_csv("long.csv")
 tick_graph <-
@@ -48,9 +47,17 @@ incidence <- inner_join(ca_subset_sf, incidence_map)
 tick_stage <- read_csv("tick_life_stage_by_county.csv")
 
 tick_stage_map <- tick_stage %>%
-  select(c(1:5, 8))
+  select(c(1:5, 8)) 
+
+tick_stage$Nymph <- as.numeric(tick_stage$Nymph)
+tick_stage$Larvae <- as.numeric(tick_stage$Larvae)
+
+tick_stage_long <- tick_stage %>% 
+  as.data.frame() %>% 
+  pivot_longer(cols = Adult:Larvae, names_to = "Life_Stage", values_to = "Count")
 
 life_stage <- inner_join(ca_subset_sf, tick_stage_map)
+life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
 ## tab 3 data
 
@@ -64,6 +71,21 @@ Tick2 <- read_csv("Tejon_clean-main/data_visualizations/Viz_Tejon_MeanComparison
 ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  # title
                  "Tick, Tick, Boom: Tick population (Family Acari) distributions in California",
+                 # intro tab
+                 tabPanel("About",
+                          sidebarLayout(
+                            sidebarPanel(h4("App Authors"), 
+                                         p("Kacie Ring, 
+                                            Stephanie Copeland, 
+                                            Conner Jainese")), 
+                            mainPanel(
+                              h2("An Exploration of Tick Dynamics in California"),
+                              img(src = "tick_picture.png", 
+                                  height = 443, width = 591),
+                              p("Image Credit: James Gathany/CDC via AP"),
+                              h4("Fourth level text")
+                            )
+                          )),
                  # first tab
                  tabPanel("Human Lyme Disease",
                           sidebarLayout(
