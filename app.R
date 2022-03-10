@@ -61,7 +61,8 @@ life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
 ## tab 3 data
 
-ticks <- read_csv("Tejon_MixedModels_Dataset.csv")
+ticks <- read_csv("Tejon_MixedModels_Dataset.csv") %>%
+  select(year, month, site, block, plot, total, deoc, ipac, deva, log_total)
 
 # Create the user interface:
 # using navbarPage() to setup tabs
@@ -122,15 +123,20 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  ),
 
                  # third tab 
-                tabPanel("Effects of Climate and Herbivore Loss on Tick Abundance",
-                sidebarLayout(
-                  sidebarPanel(NULL,
-                               radioButtons(inputId = "ticks_site",
-                                        label = "Choose Climate Treatment",
-                                        choices = c("Arid", "Intermediate", "Mesic"))), #end sidebar panel
-                  mainPanel(NULL,
-                            plotOutput(outputId = "climate_plot")) #end tab3Panel
-                )))
+                tabPanel("Case Study: Tick Abundance in South-Central CA",
+                         sidebarLayout(
+                           # create sidebar panel that will house widgets
+                           sidebarPanel(NULL,
+                                        # add checkbox group
+                                        radioButtons(inputId = "ticks_site",
+                                                     label = "Select climate",
+                                                     choices = c("Arid", "Intermediate", "Mesic"),
+                                                     selected = NULL)
+                           ),
+                           # create main panel for output
+                           mainPanel("Tick Abundance by Climate Type and Herbivore Treatment",
+                                     plotOutput(outputId = "climate_plot"))
+                         )))
                 
 # Create the server function:
 server <- function(input, output) ({
@@ -169,20 +175,21 @@ server <- function(input, output) ({
     })
 
     ## Pt 3: Tick Seasonality 
+    
     climate_select <- reactive({
       ticks %>%
         filter(site == input$ticks_site)
-    }) #end climate_select reactive
+    })
+    #end climate_select reactive
     
     output$climate_plot <- renderPlot({
+      
       ggplot(data = climate_select(), aes(x = site, y = total, fill = plot)) +
-        geom_bar(stat = "identity", position = "dodge")+
-        #geom_jitter(alpha = .15, width = .2, size = 3)+
-        scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+        geom_bar(stat = "identity", position = "dodge") +
+        scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
         theme_bw()
     })
-
-
+    #end tab 3 output 
 })
 
 # Combine them into an app:
