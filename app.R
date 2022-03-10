@@ -57,6 +57,8 @@ life_stage <- inner_join(ca_subset_sf, tick_stage_map)
 ticks <- read_csv("Tejon_MixedModels_Dataset.csv") %>%
   select(year, month, site, block, plot, total, deoc, ipac, deva, log_total)
 
+Tick2 <- read_csv("Tejon_clean-main/data_visualizations/Viz_Tejon_MeanComparisons_Dataset.csv")
+
 # Create the user interface:
 # using navbarPage() to setup tabs
 ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
@@ -101,20 +103,17 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                  ),
 
                  # third tab 
-                tabPanel("Case Study: Tick Abundance in South-Central CA",
+                tabPanel("Case Study: Tick Abundance in South-Central CA"),
                          sidebarLayout(
                            # create sidebar panel that will house widgets
                            sidebarPanel(NULL,
-                                        # add checkbox group
+                                        # add radiobutton group
                                         radioButtons(inputId = "ticks_site",
                                                      label = "Select climate",
-                                                     choices = c("Arid", "Intermediate", "Mesic"),
-                                                     selected = NULL)
-                           ),
+                                                     choices = c("Arid", "Intermediate", "Mesic"))),
                            # create main panel for output
                            mainPanel("Tick Abundance by Climate Type and Herbivore Treatment",
-                                     plotOutput(outputId = "climate_plot"))
-                         )))
+                                     plotOutput(outputId = "climate_plot"))))
                 
 # Create the server function:
 server <- function(input, output) ({
@@ -167,6 +166,7 @@ server <- function(input, output) ({
         scale_fill_manual(values = c('darkseagreen1','darkseagreen3','darkseagreen4'))+
         theme_bw()
     })
+    
     #end tab 3 output 
 })
 
