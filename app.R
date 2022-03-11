@@ -208,7 +208,7 @@ server <- function(input, output) ({
   output$tick_stage_map <- renderPlot({
     ggplot(life_stage_reactive(), aes(x = Life_Stage, y=Count, fill = Life_Stage)) + 
       geom_bar(stat="identity") + 
-      scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+      scale_fill_manual(values=c("#56B4E9","#E69F00","#999999")) +
       #geom_text(aes(label = tick_stage_long$Adults_positive_pools), hjust = -2, nudge_x = -.5,size = 4, fontface = "bold", fill = "white", label.size = 0) +
       ggtitle("Total Count of Collected Ticks by County") +
       xlab("Ixodes pacificus life stage") + 
@@ -223,7 +223,7 @@ server <- function(input, output) ({
       tm_bubbles("Count",  col = "Life_Stage",
                  border.col = "black", border.alpha = .5, 
                  style="fixed", 
-                 palette="-RdYlBu", contrast=1, 
+                 palette="Dark2", contrast=1, 
                  title.size="Tick abundace") +
       tm_layout(
         legend.title.size = 1,
