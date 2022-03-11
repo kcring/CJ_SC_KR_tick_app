@@ -14,6 +14,8 @@ library(broom)
 library(dplyr)
 library(bslib)
 library(plotly)
+install.packages("shinythemes")
+library(shinythemes)
 #install.packages("ggthemes")
 library(ggthemes)
 library(tmap)
@@ -68,28 +70,31 @@ ticks <- read_csv("Tejon_MixedModels_Dataset.csv") %>%
 
 # Create the user interface:
 # using navbarPage() to setup tabs
-ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
+ui <- navbarPage(theme = shinytheme("sandstone"),
                  # title
                  "Tick, Tick, Boom: Tick population (Family Acari) distributions in California",
                  # intro tab
                  tabPanel("About",
-                          sidebarLayout(
-                            sidebarPanel(h4("App Authors"), 
+                          sidebarLayout(position = "right",
+                            sidebarPanel(
+                              h4("App Authors"), 
                                          p("Kacie Ring, 
                                             Stephanie Copeland, 
-                                            Conner Jainese")), 
+                                            Conner Jainese"),
+                                         img(src = c("kacie.jpeg", "steph.jpg", "corndog.jpg"),
+                                             height = 15, width =15)), 
                             mainPanel(
-                              h2("An Exploration of Tick Dynamics in California"),
-                              img(src = "tick_picture.png", 
+                              h3("An Exploration of Tick Dynamics in California"),
+                              h6("The western black legged tick (Ixodes pacificus) is found along the US west coast, and is established in nearly every California county.¹ After hatching from an egg, western black legged ticks require a blood meal at every subsequent life stage (larva, nymph, adult) to survive. Reptiles, mammals, and birds are all potential food sources for a tick, and humans can also become the source of a blood meal upon encountering a tick. To become infected with the Lyme disease pathogen, ticks must feed on an infected reservoir host. Ticks can infect humans with the Lyme disease pathogen despite being considered dead end hosts."),
+                              img(src = "tick_pic.png", 
                                   height = 443, width = 591),
-                              p("Image Credit: James Gathany/CDC via AP"),
+                              p("Image Credit: CADPH"),
                               h4("Project Summaries"),
                               h5("Human Lyme Disease"), #put project summary after this heading
                               h5("Tick Life Stage Distribution in CA"), #put project summary after this heading
                               h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance"), #put project summary after this heading
                               p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27 1ha plots, initiated in 2016 to understand the ecological effects of shifting wildlife and livestock assemblages across varying climates. The 27 experimental plots spanned three aridity levels, and each level included three replicate randomized blocks. Each block contained three treatment levels of large herbivores – a) no wild ungulates or livestock (total exclosure) which functionally excluded all large herbivores over 40 kg body mass, b) wild ungulates only (partial exclosure), and c) both wildlife + livestock (open). The unique life cycle of ticks consisting of an on-host and off host (susceptible to environmental variables) stages makes them particularly sensitive to the interactive effects of changing climate and herbivory in ecosystems.")
-                            )
-                          )),
+                            ))),
                  # first tab
                  tabPanel("Human Lyme Disease",
                            #sidebarLayout(
@@ -99,7 +104,10 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                             #choices = c("Sierra" ,"Sacramento","Santa Barbara" , "Calaveras" ,"Ventura", "Los Angeles","Sonoma", "San Francisco","Marin" ,"Mariposa","Lassen","Napa","Kings","San Diego","Placer", "San Francisco", "Marin","Mariposa",  "Lassen", "Napa", "Shasta","Monterey", "Trinity","Mendocino","Inyo","Mono","Tuolumne","Solano", "San Bernardino", "Contra Costa" ,"Alpine","El Dorado","Yolo", "Yuba", "San Benito", "Humboldt", "Riverside","Kern","Colusa" ,"Del Norte" ,"Modoc", "Fresno", "Madera", "Santa Clara", "Tehama" ,"San Joaquin" ,"Alameda","Nevada","Butte", "Merced", "Tulare" , "Stanislaus","Orange","Imperial","Sutter", "Amador", "Lake" ,"Plumas" ,"San Mateo", "Siskiyou", "Santa Cruz", "Glenn", "San Luis Obispo"
                             # ))),
                             # create main panel for output
-                            mainPanel(plotlyOutput(outputId = "lyme_plot"),
+                            mainPanel(
+                              h3("Human Lyme disease incidence in California"),
+                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019. Double click on counties in the the line plot to isolate the data. Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
+                              plotlyOutput(outputId = "lyme_plot"),
                                       tmapOutput(outputId = "lyme_map"))
                           ),
                  # second tab
@@ -109,7 +117,7 @@ ui <- navbarPage(theme = bs_theme(bootswatch = "flatly"),
                                       choices = list("Sierra" ,"Sacramento","Santa Barbara" , "Calaveras" ,"Ventura", "Los Angeles","Sonoma", "San Francisco","Marin" ,"Mariposa","Lassen","Napa","Kings","San Diego","Placer", "San Francisco", "Marin","Mariposa",  "Lassen", "Napa", "Shasta","Monterey", "Trinity","Mendocino","Inyo","Mono","Tuolumne","Solano", "San Bernardino", "Contra Costa" ,"Alpine","El Dorado","Yolo", "Yuba", "San Benito", "Humboldt", "Riverside","Kern","Colusa" ,"Del Norte" ,"Modoc", "Fresno", "Madera", "Santa Clara", "Tehama" ,"San Joaquin" ,"Alameda","Nevada","Butte", "Merced", "Tulare" , "Stanislaus","Orange","Imperial","Sutter", "Amador", "Lake" ,"Plumas" ,"San Mateo", "Siskiyou", "Santa Cruz", "Glenn", "San Luis Obispo"
                                       ), 
                                       multiple = TRUE,
-                                      selected = "All"),
+                                      selected = "Santa Barbara"),
                           # sidebarPanel("Adult Tick Distribution and Infection Prevalence"),
                           # add radio button group
                           #radioButtons(inputId = "Life_Stage",
@@ -171,8 +179,11 @@ server <- function(input, output) ({
   
   output$tick_stage_map <- renderPlot({
     ggplot(life_stage_reactive(), aes(x = Total, y=County)) + 
-      geom_bar(position="stack", stat="identity") + 
-      theme_bw()
+      geom_bar(stat="identity", color="purple", fill="#69b3a2") + 
+      #geom_text(aes(label = tick_stage_long$Adults_positive_pools), hjust = -2, nudge_x = -.5,size = 4, fontface = "bold", fill = "white", label.size = 0) +
+      ggtitle("Total Count of Collected Ticks by County") +
+      xlab("Total Tick Count") + 
+      theme_bw() 
   }) #end of life stage output 
   
   output$tick_map <- renderTmap({
