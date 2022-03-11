@@ -1,0 +1,931 @@
+---
+title: "Data cleaning script"
+author: "sbsambado"
+date: "10/25/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readr)
+library(xlsx)
+library(dplyr)
+library(plyr)
+library(vegan)
+library(Rcapture)
+
+```
+
+## Dataset 1 -- Tick Density
+--> final version of exported datafile =  "Tejon_MeanComparisons_Dataset.xlsx"
+
+Step 1. Merge data
+```{r merge data}
+
+threeyrs <- read_csv("~/Google Drive/Tejon_clean/raw_data/Total_Ticks_2016_to_2018.csv")
+dim(threeyrs)
+oneyr <- read_csv("~/Google Drive/Tejon_clean/raw_data/Tick_19.csv")
+dim(oneyr)
+# get rid of survery column in threeyr since it wasn't completed in oneyrs 
+## Maybe double check survey number doesn't matter
+threeyrs <- subset(threeyrs, select = -c(3))
+
+# make sure names are the same
+## 2016 - 2018
+names(threeyrs) <- tolower(names(threeyrs))
+
+# change column names
+names(threeyrs)[6] <- "total"
+names(threeyrs)[7] <- "deoc"
+names(threeyrs)[8] <- "ipac"
+names(threeyrs)[9] <- "deva"
+names(threeyrs)[10] <- "other"
+
+## 2019
+# make sure names are the same
+names(oneyr) <- tolower(names(oneyr))
+
+# change column names
+names(oneyr)[6] <- "total"
+names(oneyr)[7] <- "deoc"
+names(oneyr)[8] <- "ipac"
+names(oneyr)[9] <- "deva"
+names(oneyr)[10] <- "other"
+
+
+tick <- rbind(threeyrs, oneyr)
+
+## add plotID
+
+tick <- transform(tick, plotID = as.numeric(interaction(site, plot,block, drop = TRUE)))
+
+```
+
+Step 2. Check data structures
+```{r check data structures}
+dim(tick) # 1449 11
+str(tick)
+
+tick$year <- as.numeric(tick$year)
+tick$site <- as.factor(tick$site)
+tick$plot <- as.factor(tick$plot)
+
+# change it to Tick cause I had further analyses labeled as Tick vs tick
+Tick <- tick
+
+# write to an excel sheet
+write.xlsx(Tick, file = "Tejon_MeanComparisons_Dataset.xlsx",
+          col.names = TRUE, row.names = FALSE)
+```
+
+## Dataset 2 -- Tick, Mammal, Climate Data
+--> final version of exported file = "Tejon_MixedModels_Dataset.xlsx"
+
+**OPTIONAL**: data not needed for these analyses but maybe down the road
+
+Step 3. Add additional data to tick counts
+~ Lots of movin' and groovin here. Trying to add multiple datasets together while avoiding duplication and too much observation lost ~
+
+a. log of tick
+b. climate (temp, precip) 
+c. vertebrate (species richness, diversity, pop estimates)
+d. celcius
+e. temperature difference
+f. elevation
+g. rain year
+h. plotID
+
+```{r add additional data}
+## a. log of tick
+# log transform data
+Tick$log_total <- log(Tick$total + 1)
+
+## b. climate
+
+############## temperature ##############
+temp <- read_csv("~/Google Drive/Tejon_clean/raw_data/Tejon_temperature_02022021.csv")
+temp.tick <- merge(Tick, temp)
+dim(temp.tick) # 1449, 14 (added meanmaxF, meanminF, station)
+#View(temp.tick)
+
+############## precipitation ##############
+
+precip <- read_csv("~/Google Drive/Tejon_clean/raw_data/tejon_tick_climate_10162020.csv")
+
+precip_subset <- subset(precip, select = c(1:5,19,20))
+names(precip_subset) <- tolower(names(precip_subset))
+temp.tick.precip <- plyr::join(temp.tick, precip_subset)
+dim(temp.tick.precip) #2025, 16 (added precip (in), precip (mm))
+names(temp.tick.precip)
+# seems like data got duplicated let's fix that
+
+# best way is to remove duplicate rows which I lose ~50 observations but I think that is a better way to do it then extract unique elements by columns since alot of these observations are repetitive
+
+temp.tick.prep.short <- temp.tick.precip %>%
+  distinct()
+
+dim(temp.tick.prep.short) # 1395, 16
+
+## c. vertebrate
+
+############## mammal metrics ############## 
+
+mam <- read_csv("~/Google Drive/Tejon_clean/raw_data/tejon_mammal_02022021.csv")
+names(mam) <- tolower(names(mam))
+
+climate.mam <- join(temp.tick.prep.short, mam)
+dim(climate.mam) # 1895, 19 (added cum_mammal, shan_mammal, rich_mammal)
+
+# remove duplicate rows
+
+climate.mam.short <- climate.mam %>%
+  distinct()
+dim(climate.mam.short) #1395, 19 # same amount of observations after climate dataset
+
+
+############## pop estimates ############## 
+
+pop_estimates <-read_csv("~/Google Drive/Tejon_clean/raw_data/tejon_mamliz_popestimates.csv")
+dim(pop_estimates) #27 5
+
+climate.mam.combo <- join(climate.mam.short, pop_estimates)
+dim(climate.mam.combo) # 1395   21 (added liz estimates, mam estimates)
+names(climate.mam.combo)[20] <- "liz_estimates"
+
+dim(climate.mam.combo) # 1395   21
+names(climate.mam.combo)
+
+## d. celcius
+climate.mam.combo$mean_maxC <- (climate.mam.combo$mean_maxF - 32)*(5/9)
+climate.mam.combo$mean_minC <- (climate.mam.combo$mean_minF - 32)*(5/9)
+
+
+## e. temperature difference 
+climate.mam.combo$tempdifF <- (climate.mam.combo$mean_maxF - climate.mam.combo$mean_minF)
+climate.mam.combo$tempdifC <- (climate.mam.combo$mean_maxC - climate.mam.combo$mean_minC)
+
+
+## f. elevation
+  climate.mam.combo$elevation <- climate.mam.combo$station
+  climate.mam.combo$elevation[climate.mam.combo$station == "Lebec"] <- 1089.7
+  climate.mam.combo$elevation[climate.mam.combo$station == "Loraine"] <- 1290.8
+  climate.mam.combo$elevation[climate.mam.combo$station == "Chuchupate"] <- 1493.5
+
+# g. rain year
+  # this is a dumb way but it is what it is
+  climate.mam.combo$rain_year <- as.numeric(climate.mam.combo$year)
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'April'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'May'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'June'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'July'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'August'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'September'] <- "2015/2016"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'October'] <- "2015/2016"
+  
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'November'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2016 & climate.mam.combo$month == 'December'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'January'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'February'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'March'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'April'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'May'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'June'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'July'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'August'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'September'] <- "2016/2017"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'October'] <- "2016/2017"
+  
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'November'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2017 & climate.mam.combo$month == 'December'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'January'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'February'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'March'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'April'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'May'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'June'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'July'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'August'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'September'] <- "2017/2018"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'October'] <- "2017/2018"
+  
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'November'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2018 & climate.mam.combo$month == 'December'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'January'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'February'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'March'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'April'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'May'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'June'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'July'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'August'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'September'] <- "2018/2019"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'October'] <- "2018/2019"
+  
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'November'] <- "2019/2020"
+  climate.mam.combo$rain_year[climate.mam.combo$year == 2019 & climate.mam.combo$month == 'December'] <- "2019/2020"
+
+## h. plotID
+climate.mam.combo <- transform(climate.mam.combo, plotidname = as.character(interaction(site, plot,block, drop = TRUE)))
+climate.mam.combo <- transform(climate.mam.combo, plotID = as.numeric(interaction(site, plot,block, drop = TRUE)))
+str(climate.mam.combo) # 1395 observations, 26 variables (added plotidname, plotID)
+
+
+```
+
+Step 4. Tidy data (will need to upload optional data from step 3)
+
+```{r tidy data}
+# put data in right format
+str(climate.mam.combo)
+
+climate.mam.combo$year <- as.factor(climate.mam.combo$year)
+climate.mam.combo$block <- as.factor(climate.mam.combo$block)
+climate.mam.combo$plotID <- as.factor(climate.mam.combo$plotID)
+climate.mam.combo$rain_year <- as.factor(climate.mam.combo$rain_year)
+climate.mam.combo$elevation <- as.numeric(climate.mam.combo$elevation)
+
+climate.mam.combo$month <- factor(climate.mam.combo$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+climate.mam.combo$site <- factor(climate.mam.combo$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+
+climate.mam.combo$plot <- factor(climate.mam.combo$plot, 
+                    levels = c('Open', 'Partial', 'Total'))
+
+# rename precip columns
+names(climate.mam.combo)[15] <- "precip_in"
+names(climate.mam.combo)[16] <- "precip_mm"
+
+```
+
+Step 5. Final data set to use for analyses
+--> final version of exported file = "Tejon_MixedModels_Dataset.xlsx"
+```{r export file for analyses}
+# Finally, the final dataset for GLMMS
+FINAL <- climate.mam.combo
+str(FINAL) # 1395 observations, 30 variables
+
+# write to an excel sheet
+write.xlsx(FINAL, file = "Tejon_MixedModels_Dataset.xlsx",
+           col.names = TRUE, row.names = FALSE)
+
+```
+
+
+
+### Additional analyses that were used to make input variables for glmms
+
+#### Population estimates for lizards and mammals
+
+Original datasets I was given: `Lizard_Counts_TREE` for lizards and `2018_smammals` and `Small_mammal_captures_19`
+
+From those, I created an excel sheet called `tejon_mamliz_popestimates` that I made based on the analyses in lizard estimates and mammal estimates. Yes, I know this could have been done with a for loop but couldn't get my brain to think about it. This excel sheet is used to build the full data sheet with climate and tick counts
+
+Step 1. Upload & tidy data
+```{r data sheets for pop estimates}
+# Used these data sheets to calculate pop estimates. All calculations used to make population estimates can be found in the dataset `tejon_mamliz_popestimates`.
+### mammals 
+mamcounts <- read_csv("~/Google Drive/Tejon_clean/raw_data/mammal_counts_02182021.csv")
+dim(mamcounts) # 229   9
+
+#str(mamcounts)
+mamcounts$day1 <- as.numeric(mamcounts$day1)
+mamcounts$day2 <- as.numeric(mamcounts$day2)
+mamcounts$day3 <- as.numeric(mamcounts$day3)
+mamcounts$site <- as.factor(mamcounts$site)
+mamcounts$plot <- as.factor(mamcounts$plot)
+mamcounts$block <- as.numeric(mamcounts$block)
+#str(mamcounts)
+
+### lizards
+lizcounts <- read_csv("~/Google Drive/Tejon_clean/raw_data/lizardcounts_02172021.csv")
+dim(lizcounts) # 1745 , 10
+names(lizcounts) <- tolower(names(lizcounts))
+
+#str(lizcounts)
+lizcounts$day1 <- as.numeric(lizcounts$day1)
+lizcounts$day2 <- as.numeric(lizcounts$day2)
+lizcounts$day3 <- as.numeric(lizcounts$day3)
+lizcounts$site <- as.factor(lizcounts$site)
+lizcounts$plot <- as.factor(lizcounts$plot)
+lizcounts$block <- as.numeric(lizcounts$block)
+#str(lizcounts)
+
+```
+
+
+Step 2. Lizard population estimates
+
+```{r lizard estimates}
+AridO <- lizcounts %>%
+  filter(site == "Arid", plot =="Open", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# ARID OPEN BLOCK 1 = 51.35882
+
+AridO <- lizcounts %>%
+  filter(site == "Arid", plot =="Open", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# ARID OPEN BLOCK 2 = 60.5687
+
+AridO <- lizcounts %>%
+  filter(site == "Arid", plot =="Open", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# ARID OPEN BLOCK 3 = 82.54301
+
+
+
+##########################################################################
+AridP <- lizcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID PARTIAL Block 1 = 73.4186
+
+AridP <- lizcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID PARTIAL Block 2 = 72.96941
+
+AridP <- lizcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID PARTIAL Block 3 = 69.2156
+
+
+##########################################################################
+
+AridT <- lizcounts %>%
+  filter(site == "Arid", plot =="Total", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTALBLOCK 1 = 67.28581
+
+AridT <- lizcounts %>%
+  filter(site == "Arid", plot =="Total", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTALBLOCK 2 = 60.0097
+
+AridT <- lizcounts %>%
+  filter(site == "Arid", plot =="Total", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTALBLOCK 3 = 88.44651
+
+
+##############################################################################
+##############################################################################
+##############################################################################
+
+
+IntermediateO <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Open", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(IntermediateO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate OPEN BlOCK 1 = 129.3622
+
+IntermediateO <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Open", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(IntermediateO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate OPEN BlOCK 2 = 84.6362
+
+IntermediateO <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Open", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(IntermediateO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate OPEN BlOCK 3 = 207.9784
+
+##########################################################################
+IntermediateP <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 1) %>%
+  select(day1, day2, day3) %>%
+  na.omit(lizardcounts)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 1 = 133.5039
+
+IntermediateP <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 2 = 47.43047
+
+IntermediateP <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 3 = 162.613
+
+##########################################################################
+
+IntermediateT <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance , lowest BIC had negative value with Mbh so I chose next best model Mb abundance = 137.9494
+
+## Intermediate TOTAL BLOCK 1 = 398.0468
+
+IntermediateT <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate TOTAL BLOCK 2 = 84.5119
+
+IntermediateT <- lizcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate TOTAL BLOCK 3 = 176.55
+
+
+```
+
+Step 3. Mammal population estimates
+
+```{r mammal estimates }
+AridO <- mamcounts %>%
+  filter(site == "Arid", plot =="Open", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID OPEN Block 1 = 2
+
+AridO <- mamcounts %>%
+  filter(site == "Arid", plot =="Open", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID OPEN Block 2 = 5.236068
+
+AridO <- mamcounts %>%
+  filter(site == "Arid", plot =="Open", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundance0 = closedp.t(AridO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundance0$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID OPEN Block 3 = 2.618034
+
+##########################################################################
+AridP <- mamcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID PARTIAL BLOCK 1= 15.51451
+AridP <- mamcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance , lowest BIC was negative so chose next lowest model M0
+
+## ARID PARTIAL BLOCK 2= 45.38767
+AridP <- mamcounts %>%
+  filter(site == "Arid", plot =="Partial", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(AridP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID PARTIAL BLOCK 3= estimates were in the 500000000 so I chose to omit this block 
+
+##########################################################################
+
+AridT <- mamcounts %>%
+  filter(site == "Arid", plot =="Total", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTAL block 1= 15.51451
+
+AridT <- mamcounts %>%
+  filter(site == "Arid", plot =="Total", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTAL block 2= 40.80791
+
+AridT <- mamcounts %>%
+  filter(site == "Arid", plot =="Total", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(AridT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## ARID TOTAL block 3= 15.51451
+
+
+##############################################################################
+##############################################################################
+##############################################################################
+
+# no mammals trapped at block 1 intermediate open
+
+IntermediateO <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Open", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(IntermediateO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate OPEN BLOCK 2 = 5.236068
+
+IntermediateO <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Open", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(IntermediateO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate OPEN BLOCK 3 = estimates were in the 7e09 so I chose to omit this block 
+
+
+##########################################################################
+IntermediateP <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 1= 7.734787
+
+IntermediateP <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 2 = 2
+
+IntermediateP <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Partial", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(IntermediateP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Intermediate PARTIAL BLOCK 1= estimates were in 700 so omitted this data
+
+##########################################################################
+
+IntermediateT <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] 
+
+## Intermediate TOTAL BLOCK 1= 	31.33333
+
+IntermediateT <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] 
+
+## Intermediate TOTAL BLOCK 2= 	estimates over 5 mil so omitted
+
+IntermediateT <- mamcounts %>%
+  filter(site == "Intermediate", plot =="Total", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(IntermediateT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] 
+## Intermediate TOTAL BLOCK 1= 	2
+
+
+#############################################################################
+# MESIC
+#############################################################################
+#############################################################################
+
+MesicO <- mamcounts %>%
+  filter(site == "Mesic", plot =="Open", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(MesicO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Mesic OPEN BLOCK 1= 28.5
+
+MesicO <- mamcounts %>%
+  filter(site == "Mesic", plot =="Open", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(MesicO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Mesic OPEN BLOCK 2= 2
+
+MesicO <- mamcounts %>%
+  filter(site == "Mesic", plot =="Open", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceO = closedp.t(MesicO, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceO$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+## Mesic OPEN BLOCK3 = 12.0847
+
+
+##########################################################################
+MesicP <- mamcounts %>%
+  filter(site == "Mesic", plot =="Partial", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(MesicP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# MESIC PARTIAL BLOCK1 = 215.727
+
+MesicP <- mamcounts %>%
+  filter(site == "Mesic", plot =="Partial", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(MesicP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# MESIC PARTIAL BLOCK 2= 15.51451
+
+MesicP <- mamcounts %>%
+  filter(site == "Mesic", plot =="Partial", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceP = closedp.t(MesicP, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceP$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance 
+
+# MESIC PARTIAL BLOCK = estimates were 10mil so omitted them
+
+##########################################################################
+
+MesicT <- mamcounts %>%
+  filter(site == "Mesic", plot =="Total", block == 1) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(MesicT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance # second best fit model is M0, since 1st best fit is -10 with Mb
+
+## Mesic TOTAL BLOCK 1 = 62.26667
+
+MesicT <- mamcounts %>%
+  filter(site == "Mesic", plot =="Total", block == 2) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(MesicT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance # second best fit model is M0, since 1st best fit is -10 with Mb
+
+## Mesic TOTAL BLOCK 2 = 7.854102
+
+MesicT <- mamcounts %>%
+  filter(site == "Mesic", plot =="Total", block == 3) %>%
+  select(day1, day2, day3)
+  
+abundanceT = closedp.t(MesicT, dfreq = FALSE, dtype="hist") 
+models <- as.data.frame(abundanceT$results)
+models <- models[order(models$BIC), ]
+
+models[1,1] # select total abundance # second best fit model is M0, since 1st best fit is -10 with Mb
+
+## Mesic TOTAL BLOCK 1 = 17.20092
+
+```
+#### Mammal metrics of Shannon richness and species diversity
+
+*Original datasets I was given: `2018_smammals` and `Small_mammal_captures_19`* 
+
+From those, I created excel sheets called `tejon_mammals1819_09022020` and `tejon_mammalcount_09032020`.
+
+
+```{r mammal metrics, warning=FALSE}
+# full dataset
+mammals <- read_csv("~/Google Drive/Tejon_clean/raw_data/tejon_mammals1819_09022020.csv")
+# subset for important
+mammal <-data.frame(mammals[,4:6],mammals[,9])
+
+
+# numeric dataframe for community analysis
+Count <- read_csv("~/Google Drive/Tejon_clean/raw_data/tejon_mammalcount_09032020.csv")
+
+# remove the arid with NAs, this will be the full dataset with species richenss and diversity added
+count <- Count[-4,]
+# keep only numeric data to run community analyses
+numeric <- count[,c(-1,-2,-9,-10)]
+# organize data into right forms
+count$plot <- factor(count$plot, 
+                        levels = c('open','partial','total'))
+# species richness
+sppr <- specnumber(numeric)
+# shannon diversity
+shannondiv <- diversity(numeric)
+# add species richness to count
+count$sppr<-specnumber(numeric)
+# add shannon diversity to count
+count$shannondiv <- diversity(numeric)
+
+aggregate(shannondiv ~plot, data = count, FUN = mean)
+```
+

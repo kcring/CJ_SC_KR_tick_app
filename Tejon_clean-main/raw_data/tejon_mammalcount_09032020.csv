@@ -1,0 +1,11 @@
+﻿site,plot,pema,pebo,peca,mice,chca,nema,NA,total
+arid,open,7,1,0,0,0,0,5,13
+arid,partial,23,10,0,1,2,0,6,42
+arid,total,12,12,0,4,1,0,5,34
+arid,NA,1,4,0,0,1,0,2,8
+intermediate,open,7,1,0,0,0,0,0,8
+intermediate,partial,9,3,0,0,0,0,0,12
+intermediate,total,17,6,0,0,0,0,0,23
+mesic,open,17,9,14,0,0,0,8,48
+mesic,partial,19,8,17,0,0,3,15,62
+mesic,total,17,12,31,1,0,0,11,72
