@@ -127,7 +127,7 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                             # create main panel for output
                             mainPanel(
                               h3("Human Lyme disease incidence in California"),
-                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019.Double click on counties in the the line plot to isolate the data."),
+                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below are two human Lyme disease incidence data sets in California, one from 2011-2020 and the other from 2009-2019.Double click on counties in the the line plot to isolate the data."),
                               plotlyOutput(outputId = "lyme_plot"),
                               h3("California map of human Lyme disease incidence per 100,000 individuals"),
                               p("Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
