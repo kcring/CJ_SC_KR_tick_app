@@ -23,7 +23,7 @@ library(sf)
 library(leaflet)
 
 
-pt_coords <- reactiveVal()
+
 
 long <- read_csv("long.csv")
 long$year <- as.character(long$year)
@@ -32,6 +32,8 @@ tick_graph <-
   geom_line(aes(color = County)) +
   labs(x = "Year", y = "Lyme Disease Incidence", title = "Human Lyme Disease Incidence 2011-2020")
 theme_minimal()
+
+
 
 ca_counties_sf <- read_sf(here("ca_counties", "CA_Counties_TIGER2016.shp"))
 
@@ -47,6 +49,19 @@ incidence_map <- lyme %>%
   rename(incidence = "Incidence/100000")
 
 incidence <- inner_join(ca_subset_sf, incidence_map)
+
+top_pos_county_time <- lyme %>% 
+  select(-last_col())%>%
+  filter(!row_number() %in% c(59:61)) %>%
+  filter(TOTAL > 30) %>%
+  select(-TOTAL) %>%
+  select(-last_col())
+
+long_top<- top_pos_county_time  %>% 
+  pivot_longer(!County,
+               names_to = "year",
+               values_to = "incidence") %>% 
+  group_by(County) 
 
 #tab 2 incidence data wrangling
 
@@ -86,15 +101,15 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                           sidebarLayout(position = "right",
                             sidebarPanel(
                               h4("App Authors"), 
-                                         p("Kacie Ring, 
-                                            Stephanie Copeland, 
-                                            Conner Jainese"),
-                                         img(src = c("kacie.jpeg"),
-                                             height = 90, width =75),
-                                         img(src = c("steph.jpg"),
-                                          height = 90, width =75),
-                                          img(src = c("corndog.jpg"),
-                                              height = 90, width =75)
+                              img(src = c("kacie.jpeg"),
+                                  height = 175, width =175),
+                                         p("Kacie Ring, 2nd year PhD studetnt EEMB, Briggs Lab"), 
+                              img(src = c("steph.JPG"),
+                                  height = 175, width =175),
+                                         p("Stephanie Copeland, 1st year PhD student EEMB, Young Lab"), 
+                              img(src = c("corndog.jpg"),
+                                  height = 175, width =175),     
+                              p("Conner Jainese, 2nd year PhD student EEMB, Caselle Lab")
                               ), 
                             mainPanel(
                               h3("An Exploration of Tick Dynamics in California"),
@@ -111,9 +126,9 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                               h4("Human Lyme Disease"), #put project summary after this heading
                               h5("If left untreated, individuals can experience early and late Lyme disease symptoms . Early symptoms include a round bullseye rash, Erythema migrans, along with fever, chills, fatigue, muscle/joint aches, and swollen lymph nodes. After about 30 days to a few months, Lyme disease symptoms can progress to include severe headache, facial palsy, arthritis, irregular heartbeats, inflammation of the brain/spinal cord, and nerve pain."),#put project summary after this heading
                               img(src = "early.jpg", 
-                                  height = 260, width = 325),
+                                  height = 225, width = 300),
                               img(src = "late.jpg", 
-                                  height = 260, width = 325),
+                                  height = 225, width = 300),
                               p("Symptoms of Lyme disease if left untreated. Early (left) versus late (right) dissmeintated. Image Source: Healthline ")
                             ))),
                  # first tab
@@ -126,12 +141,14 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                             # ))),
                             # create main panel for output
                             mainPanel(
-                              h3("Human Lyme disease incidence in California"),
-                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019.Double click on counties in the the line plot to isolate the data."),
+                              h3("Human Lyme disease incidence across California"),
+                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below are two human Lyme disease incidence data sets in California, one from 2011-2020 and the other from 2009-2019.Double click on counties in the the line plot to isolate the data."),
                               plotlyOutput(outputId = "lyme_plot"),
                               h3("California map of human Lyme disease incidence per 100,000 individuals"),
                               p("Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
-                                      tmapOutput(outputId = "lyme_map"))
+                                      tmapOutput(outputId = "lyme_map"),
+                              h3("Top 10 CA counties with highest human Lyme disease incidence"),
+                              plotlyOutput(outputId = "lyme_plot_top"))
                           ),
                  # second tab
                  tabPanel("Life Stage Map",
@@ -154,7 +171,11 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                           #Nymph",
                           #"Adult"),
                           # selected = NULL),
-                          mainPanel(tmapOutput(outputId = "tick_map"),
+                          mainPanel(h4("Tick abundance in Each  CA county across life stages"),
+                                    p("Ticks are present in nearly every county in CA, yet abundance data is severly lacking and biases collection of adults ticks which are easy to see in comparison to the smaller juvenile stages (larvae and nymph). The map below shows tick abundace data collected by the California department of public health and vector control agencies. Average incidence of adult ticks is indicated by the county color, the bubbles show the number of ticks collected in each region by life stage."),
+                            tmapOutput(outputId = "tick_map"),
+                            h4("Life stage abundace"),
+                            p("Select a county on the right to see the abundace of larvae, nymph, and adult ticks collected at each life stage . NOTE: these abundace estimates do not reflect actual tick abundaces across CA, larvae make up the most abundant life stage followed by nymphs. Adults have the lowest population numbers, yet they have the highest abundance estimates due to collection bias."),
                             plotOutput(outputId = "tick_stage_map"))
                  )),
                  
@@ -162,19 +183,23 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                  tabPanel("Case Study",
                           sidebarLayout(position = "right",
                                         # create sidebar panel that will house widgets
-                                        sidebarPanel(NULL,
+                                        sidebarPanel(NULL, width = 5,
                                                      # add radiobutton group
                                                      radioButtons(inputId = "ticks_site",
                                                                   label = "Select climate",
-                                                                  choices = c("Arid", "Intermediate", "Mesic"))),
+                                                                  choices = c("Arid", "Intermediate", "Mesic")),
+                                                     img(src = "Tejon.png",
+                                                         height = 270, width = 380),
+                                                     p("SJArt", style = "font-size:10px")
+),
                                         # create main panel for output
-                                        mainPanel(h4("Tick Abundance at the Tejon Ranch Exclosure Experiment (TREE)."),
-                                                  h5("Tick Abundance by Climate Type and Herbivore Treatment"),
+                                        mainPanel(NULL, width = 7, h4("How Climate and Herbivory Intensity can impact Tick Abundances on the Landscape"),
+                                                  
                                                   plotOutput(outputId = "climate_plot"),
-                                                  h5("TREE Study Design Visual"),
-                                                  img(src = "Tejon.png",
-                                                      height = 443, width = 750),
-                                                  p("SJArt")
+                                                  p("Populations of large-bodied herbivores are shifting around the world. Directly, large wildlife can serve as hosts for ticks, maintaining tick disease transmission cycles. However indirectly, they can modify habitat and suppress abundance of small animal hosts, which in turn suppresses tick densities, thereby decreasing disease risk. Wildlife losses are also frequently accompanied by livestock additions. We used a large-scale exclosure experiment replicated along an elevational gradient to examine the effects of large wildlife removal and cattle additions on ticks and tickborne disease dynamics in southern California. We found that overall, tick abundance increases when wild herbivores are removed, and decreases when livestock are added. Importantly, in addition to direct effects of climate on tick abundance, climate also mediated the effect of ungulates on questing tick density. Click on the buttons above to observe how tick abundance changed under different climate and herbivory treatments."),
+                                                  h4("Study Design"),
+                                                  p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27, 1 hectare plots, to understand the ecological effects of changing wildlife and livestock assemblages across climate zones. The 27 plots span three aridity levels (Arid - hottest, driest; Intermediate; Mesic - coolest, wettest). Each zone includes three replicate blocks. Each block containes three treatment levels of large herbivores – a) no wild large herbivores or livestock (total exclosure), b) wild large herbivores only (partial exclosure), and c) both wild large herbivores + livestock (open). The experiment is located on Tejon Ranch Company property managed in collaboration with the Tejon Ranch Conservancy just outside of Arvin, California.")
+
                                         ))))
 
 # Create the server function:
@@ -188,7 +213,7 @@ server <- function(input, output) ({
   
   output$lyme_map <- renderTmap({
     tm_shape(incidence) +
-      tm_fill("incidence", palette = "BuGn",legend.title = "Lyme disease incidence per 100,000 residents" )
+      tm_fill("incidence", palette = "OrRd",legend.title = "Lyme disease incidence per 100,000 residents" )
   })
   
   output$lyme_plot <- renderPlotly({
@@ -197,6 +222,14 @@ server <- function(input, output) ({
       labs(x = "Year", y = "Lyme Disease Incidence", title = "Human Lyme Disease Incidence 2011-2020") +
       theme_minimal()
   }) 
+  
+  output$lyme_plot_top <- renderPlotly({
+    ggplot(data = long_top, aes(x = year, y = incidence, group = County)) +
+      geom_line(aes(color = County)) +
+      labs(x = "Year", y = "Lyme Disease Incidence", title = "Human Lyme Disease Incidence 2011-2020 - Top 5 CA Counties") +
+    theme_minimal()
+  })
+  
   #end tab 1 human Lyme 
   
   life_stage_reactive <- reactive({
@@ -208,7 +241,7 @@ server <- function(input, output) ({
   output$tick_stage_map <- renderPlot({
     ggplot(life_stage_reactive(), aes(x = Life_Stage, y=Count, fill = Life_Stage)) + 
       geom_bar(stat="identity") + 
-      scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
+      scale_fill_manual(values=c("#56B4E9","#E69F00","#999999")) +
       #geom_text(aes(label = tick_stage_long$Adults_positive_pools), hjust = -2, nudge_x = -.5,size = 4, fontface = "bold", fill = "white", label.size = 0) +
       ggtitle("Total Count of Collected Ticks by County") +
       xlab("Ixodes pacificus life stage") + 
@@ -223,12 +256,13 @@ server <- function(input, output) ({
       tm_bubbles("Count",  col = "Life_Stage",
                  border.col = "black", border.alpha = .5, 
                  style="fixed", 
-                 palette="-RdYlBu", contrast=1, 
+                 palette="Dark2", contrast=1, 
                  title.size="Tick abundace") +
       tm_layout(
         legend.title.size = 1,
         legend.text.size = 0.6)
   })  #end of tab 2 life stage 
+  
   
   
   ## Pt 3: Tick Seasonality 
