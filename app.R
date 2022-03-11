@@ -14,7 +14,7 @@ library(broom)
 library(dplyr)
 library(bslib)
 library(plotly)
-install.packages("shinythemes")
+#install.packages("shinythemes")
 library(shinythemes)
 #install.packages("ggthemes")
 library(ggthemes)
@@ -26,6 +26,7 @@ library(leaflet)
 pt_coords <- reactiveVal()
 
 long <- read_csv("long.csv")
+long$year <- as.character(long$year)
 tick_graph <-
   ggplot(data = long, aes(x = year, y = incidence, group = County)) +
   geom_line(aes(color = County)) +
@@ -64,6 +65,8 @@ tick_stage_long <- tick_stage %>%
 life_stage <- inner_join(ca_subset_sf, tick_stage_map)
 life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 
+
+
 ## tab 3 data
 
 ticks <- read_csv("Tejon_MixedModels_Dataset.csv") %>%
@@ -86,21 +89,32 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                                          p("Kacie Ring, 
                                             Stephanie Copeland, 
                                             Conner Jainese"),
-                                         img(src = c("kacie.jpeg", "steph.jpg", "corndog.jpg"),
-                                             height = 15, width =15)), 
+                                         img(src = c("kacie.jpeg"),
+                                             height = 90, width =75),
+                                         img(src = c("steph.jpg"),
+                                          height = 90, width =75),
+                                          img(src = c("corndog.jpg"),
+                                              height = 90, width =75)
+                              ), 
                             mainPanel(
                               h3("An Exploration of Tick Dynamics in California"),
-                              h6("The western black legged tick (Ixodes pacificus) is found along the US west coast, and is established in nearly every California county.¹ After hatching from an egg, western black legged ticks require a blood meal at every subsequent life stage (larva, nymph, adult) to survive. Reptiles, mammals, and birds are all potential food sources for a tick, and humans can also become the source of a blood meal upon encountering a tick. To become infected with the Lyme disease pathogen, ticks must feed on an infected reservoir host. Ticks can infect humans with the Lyme disease pathogen despite being considered dead end hosts."),
+                              h5("In the northern hemisphere, Lyme disease is the most common vector-borne disease, causing an estimated 300,000 cases annually in the U.S.¹ It is caused by the bacterial agent Borrelia burgdorferi (Bb) and vectored by Ixodes spp. ticks. In California, Lyme disease is vectored by Ixodes pacificus and maintained by vertebrate disease reservoirs, namely rodents.Encounters with ticks provide potential health risks in the form of Lyme Disease. Developing our understanding of tick population dynamics and distribution throughout California is important for prevention of Lyme disease. "),
                               img(src = "tick_pic.png", 
-                                  height = 443, width = 591),
-                              p("Image Credit: CADPH"),
+                                  height = 343, width = 491, align = "center"),
+                              p("Ixodes pacificus tick Image Credit: CADPH"),
 
-                              h4("Project Summaries"),
-                              h5("Human Lyme Disease"), #put project summary after this heading
-                              h5("Tick Life Stage Distribution in CA"), #put project summary after this heading
-                              h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance"), #put project summary after this heading
-                              p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27 1ha plots, initiated in 2016 to understand the ecological effects of shifting wildlife and livestock assemblages across varying climates. The 27 experimental plots spanned three aridity levels, and each level included three replicate randomized blocks. Each block contained three treatment levels of large herbivores – a) no wild ungulates or livestock (total exclosure) which functionally excluded all large herbivores over 40 kg body mass, b) wild ungulates only (partial exclosure), and c) both wildlife + livestock (open). The unique life cycle of ticks consisting of an on-host and off host (susceptible to environmental variables) stages makes them particularly sensitive to the interactive effects of changing climate and herbivory in ecosystems.")
-
+                              h4("Tick Life Cycle"),
+                              h5("After hatching from an egg, western black legged ticks require a blood meal at every subsequent life stage (larva, nymph, adult) to survive. Juvenile larvae and nymphs are out primarily inthe Spring, whereas Adults tend to emerige in the Winter.  To become infected with the Lyme disease pathogen, ticks must feed on an infected reservoir host.Reptiles, mammals, and birds are all potential food sources for a tick, and humans can also become the source of a blood meal upon encountering a tick."),
+                              img(src = "life_cycle.jpg", 
+                                  height = 300, width = 375),
+                              p("Image Credit: CDC"),
+                              h4("Human Lyme Disease"), #put project summary after this heading
+                              h5("If left untreated, individuals can experience early and late Lyme disease symptoms . Early symptoms include a round bullseye rash, Erythema migrans, along with fever, chills, fatigue, muscle/joint aches, and swollen lymph nodes. After about 30 days to a few months, Lyme disease symptoms can progress to include severe headache, facial palsy, arthritis, irregular heartbeats, inflammation of the brain/spinal cord, and nerve pain."),#put project summary after this heading
+                              img(src = "early.jpg", 
+                                  height = 260, width = 325),
+                              img(src = "late.jpg", 
+                                  height = 260, width = 325),
+                              p("Symptoms of Lyme disease if left untreated. Early (left) versus late (right) dissmeintated. Image Source: Healthline ")
                             ))),
                  # first tab
                  tabPanel("Human Lyme Disease",
@@ -113,18 +127,25 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                             # create main panel for output
                             mainPanel(
                               h3("Human Lyme disease incidence in California"),
-                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019. Double click on counties in the the line plot to isolate the data. Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
+                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019.Double click on counties in the the line plot to isolate the data."),
                               plotlyOutput(outputId = "lyme_plot"),
+                              h3("California map of human Lyme disease incidence per 100,000 individuals"),
+                              p("Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
                                       tmapOutput(outputId = "lyme_map"))
                           ),
                  # second tab
                  tabPanel("Life Stage Map",
+                          sidebarLayout(position = "right",
+                          sidebarPanel(
+                            h4("Tick Life Stages"), 
+                            img(src = c("life_stage.png"),
+                                height = 400, width =175),
                           selectInput(inputId = "County", 
                                       label = h3("Select Counties"), 
                                       choices = list("Sierra" ,"Sacramento","Santa Barbara" , "Calaveras" ,"Ventura", "Los Angeles","Sonoma", "San Francisco","Marin" ,"Mariposa","Lassen","Napa","Kings","San Diego","Placer", "San Francisco", "Marin","Mariposa",  "Lassen", "Napa", "Shasta","Monterey", "Trinity","Mendocino","Inyo","Mono","Tuolumne","Solano", "San Bernardino", "Contra Costa" ,"Alpine","El Dorado","Yolo", "Yuba", "San Benito", "Humboldt", "Riverside","Kern","Colusa" ,"Del Norte" ,"Modoc", "Fresno", "Madera", "Santa Clara", "Tehama" ,"San Joaquin" ,"Alameda","Nevada","Butte", "Merced", "Tulare" , "Stanislaus","Orange","Imperial","Sutter", "Amador", "Lake" ,"Plumas" ,"San Mateo", "Siskiyou", "Santa Cruz", "Glenn", "San Luis Obispo"
                                       ), 
-                                      multiple = TRUE,
-                                      selected = "Santa Barbara"),
+                                      multiple = FALSE,
+                                      selected = "Santa Barbara")),
                           # sidebarPanel("Adult Tick Distribution and Infection Prevalence"),
                           # add radio button group
                           #radioButtons(inputId = "Life_Stage",
@@ -133,9 +154,9 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                           #Nymph",
                           #"Adult"),
                           # selected = NULL),
-                          mainPanel(plotOutput(outputId = "tick_stage_map"),
-                                    tmapOutput(outputId = "tick_map"))
-                 ),
+                          mainPanel(tmapOutput(outputId = "tick_map"),
+                            plotOutput(outputId = "tick_stage_map"))
+                 )),
                  
                  # third tab 
                  tabPanel("Case Study",
@@ -185,11 +206,12 @@ server <- function(input, output) ({
   }) #end of life stage reactive
   
   output$tick_stage_map <- renderPlot({
-    ggplot(life_stage_reactive(), aes(x = Total, y=County)) + 
-      geom_bar(stat="identity", color="purple", fill="#69b3a2") + 
+    ggplot(life_stage_reactive(), aes(x = Life_Stage, y=Count, fill = Life_Stage)) + 
+      geom_bar(stat="identity") + 
+      scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9")) +
       #geom_text(aes(label = tick_stage_long$Adults_positive_pools), hjust = -2, nudge_x = -.5,size = 4, fontface = "bold", fill = "white", label.size = 0) +
       ggtitle("Total Count of Collected Ticks by County") +
-      xlab("Total Tick Count") + 
+      xlab("Ixodes pacificus life stage") + 
       theme_bw() 
   }) #end of life stage output 
   
