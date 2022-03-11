@@ -1,0 +1,331 @@
+---
+title: "Data Figures and Tables"
+author: "sbsambado"
+date: "10/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readr)
+library(ggpubr)
+library(ggplot2)
+library(gridExtra)
+library(kableExtra)
+library(ggfortify)
+library(gtsummary)
+library(lme4)
+library(effects)
+library(jtools)
+library(huxtable)
+
+# set up some visualization vectors
+clean_background <- theme(plot.background = element_rect("white"),
+        panel.background = element_rect("white"),
+        panel.grid = element_line("white"),
+        axis.line = element_line("gray25"),
+        axis.text = element_text(size = 12, color = "gray25"),
+        axis.title = element_text(color = "gray25"),
+        legend.text = element_text(size = 12),
+        legend.key = element_rect("white"))
+
+plotcolor = c('darkseagreen1','darkseagreen3','darkseagreen4')
+sitecolor = c('brown1','tan1','lightgoldenrod1')
+
+rotatexaxistheme <- theme(axis.text.x = element_text(angle = 90, size = 8, vjust = 0.5))
+
+ytitletheme <- theme(axis.title.y = element_text(face = 'bold', size = 12, vjust = 0.5))
+
+xtitletheme <- theme(axis.title.x = element_text(face = 'bold', size = 12, vjust = 0.5))
+
+
+```
+
+## Figure 1
+**Tick counts by one variable (plot or site)**
+
+```{r}
+Tick <- read_csv("Viz_Tejon_MeanComparisons_Dataset.csv")
+
+# omit 0s to make plots look nicer, but this may not be kosher
+Tick_no0 <- Tick[which(Tick$total != 0),]
+
+plot1 <- ggplot(Tick_no0, aes(x = plot, y = log(total +1), fill = plot))+
+  #geom_jitter(alpha = .15, width = .2)+
+  geom_boxplot()+
+  theme_bw() +
+  labs(x = 'Plot', y = 'log(Total ticks) 2016 - 2019') +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  guides(fill = FALSE)+
+  annotate('text', label='A', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
+
+site1 <-ggplot(Tick_no0, aes(x = site, y = log(total +1), fill = site))+
+  #geom_jitter(alpha = .15, width = .2)+
+  geom_boxplot() +
+  theme_bw() +
+  labs(x = 'Site', y = 'log(Total ticks) 2016 - 2019') +
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)+
+  annotate('text', label='B', x=-Inf, y=Inf, hjust=-.5, vjust=2,size = 7)
+
+var_plot <-ggarrange(plot1 + rremove('ylab'), site1 + rremove('ylab'),
+          ncol = 2)
+annotate_figure(var_plot,
+          left = text_grob("Log of tick counts (2016 - 2019)", rot = 90, face = "bold"))
+#ggsave("data_visualizations/Fig1_OneVarTick.jpeg", dpi = 320)          
+
+
+```
+## Figure 2. 
+** Tick counts by two variables (plot and site)**
+
+```{r}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+# omit 0s to make plots look nicer, but this may not be kosher
+Tick_no0 <- Tick[which(Tick$total != 0),]
+
+ggplot(Tick_no0, aes(x = site, y = log(total + 1), fill = plot))+
+  geom_boxplot()+
+  #geom_point(alpha = .15)+
+  theme_bw() +
+  labs(x = 'Site', y = "Log of tick counts (2016 - 2019)", fill = 'Plot') +
+  xtitletheme + ytitletheme+
+  scale_fill_manual(values =c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  theme(legend.position = c(.911, .816), # horizontal, verticle
+        legend.box.background = element_rect(color = 'black', fill =NA),legend.key.size = unit(.8,"line"))
+ggsave("data_visualizations/Fig2_TwoVarTick.jpeg", dpi = 320)  
+
+```
+
+## Figure 3. 
+**Climate by site**
+
+```{r}
+FINAL <- read_csv("data_analyses/Tejon_MixedModels_Dataset.csv")
+
+# change data structure
+FINAL$site <- as.factor(FINAL$site)
+FINAL$plot <- as.factor(FINAL$plot)
+FINAL$tempdifC <- as.numeric(FINAL$tempdifC)
+FINAL$mean_maxC <- as.numeric(FINAL$mean_maxC)
+
+ggplot(FINAL, aes(y = tempdifC, x = site, fill = site))+
+  geom_boxplot() +
+  #geom_jitter(alpha = .15, width = .2)+
+  theme_bw()+
+  labs(x = 'Site', y = 'Difference in monthly\n mean temperature (°C)', fill = "Site")+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values =c('brown1','tan1','lightgoldenrod1'))+
+  guides(fill = FALSE)
+ggsave("data_visualizations/Fig3_DiffTempCSite.jpeg", dpi = 320)
+
+```
+## Figure 4. 
+**Effects plot: tick counts ~ cattle + climate**
+
+```{r}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+# mod_plot <- glmer.nb(total ~ plot + (1|month) + (1|plotID), 
+#             data = Tick, family = "poisson")
+# 
+# mod_site <- glmer.nb(total ~ site  + (1|month) + (1|plotID), 
+#             data = Tick, family = "poisson")
+# 
+# mod_both <- glmer.nb(total ~ site + plot + (1|month) + (1|plotID), 
+#             data = Tick, family = "poisson")
+
+## plot_summs()
+plot_summs(mod_plot, mod_site, mod_both,
+           scale = TRUE,
+           model.names = c("Only Cattle (plot)", "Only Climate (site)", "Both Cattle & Climate"),
+           inner_ci_level = .8,
+           robust = TRUE,
+           coefs = c("Partial plot" = "plotPartial",
+                     "Total plot" = "plotTotal",
+                     "Inter. site" = "siteIntermediate", 
+                     "Mesic site" = "siteMesic"))
+ggsave("data_visualizations/Fig4_Coefficients.jpeg", dpi = 320)
+
+
+```
+### Supplemental
+
+## Figure 5.
+**Tick counts by month (site)**
+
+```{r}
+
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+Tick$month <- factor(Tick$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+Tick$site <- factor(Tick$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+
+Tick$plot <- factor(Tick$plot, 
+                    levels = c('Open', 'Partial', 'Total'))
+
+ggplot(Tick, aes(x = site, y = log(total +1), fill = site))+
+  facet_wrap(~ month, ncol = 6)+
+  geom_boxplot()+
+  theme_bw() +
+  scale_x_discrete(labels = c("A", "I", "M")) +
+  theme(strip.background = element_rect(fill = "gray95"),
+        strip.text = element_text(size=6, face = 'bold'))+
+  labs(x = 'Site', y = 'Log of tick counts (2016 - 2019)') +
+  xtitletheme + ytitletheme +
+  guides(fill = FALSE)+
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))
+ggsave("data_visualizations/Fig5_MonthlyTickSite.jpeg", dpi = 320)
+
+
+
+```
+
+## Figure 6. 
+**Tick counts by month (both variables)**
+```{r}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+Tick$month <- factor(Tick$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+Tick$site <- factor(Tick$site, 
+                    levels = c('Arid', 'Intermediate', 'Mesic'))
+
+Tick$plot <- factor(Tick$plot, 
+                    levels = c('Open', 'Partial', 'Total'))
+
+ggplot(Tick, aes(x = site, y = log(total +1), fill = plot))+
+  facet_wrap(~ month, ncol = 6)+
+  geom_boxplot()+
+  theme_bw() +
+  scale_x_discrete(labels = c("A", "I", "M")) +
+  theme(strip.background = element_rect(fill = "gray95"),
+        strip.text = element_text(size=6, face = 'bold'),
+        legend.position =  'bottom')+
+  labs(x = 'Site', y = 'Log of tick counts (2016 - 2019)') +
+  xtitletheme + ytitletheme +
+  #guides(fill = FALSE)+
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))
+ggsave("data_visualizations/Fig6_MonthlyTickSitePlot.jpeg", dpi = 320)
+```
+
+## Figure 7.
+**Vertebrate population estimates**
+
+```{r}
+pop <- read_csv("raw_data/tejon_mamliz_popestimates.csv")
+
+# rename columns to be consistant
+names(pop)[5] <- "mam_estimate"
+
+# change data structure for analyses
+pop$site <- as.factor(pop$site)
+pop$plot <- as.factor(pop$plot)
+
+liz <- ggplot(pop, aes(x = site, y = liz_estimate, fill = site))+
+  geom_boxplot()+
+  theme_bw()+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('darkseagreen1','darkseagreen3','darkseagreen4'))+
+  labs(x = "Site", y = "Lizard Pop. Estimates")+
+  guides(fill = FALSE)
+
+# omit outlier
+pop_sub <- pop[which(pop$mam_estimate != "216"),]
+
+mam <- ggplot(pop_sub, aes(x = plot, y = mam_estimate, fill = plot))+
+  geom_boxplot()+
+  theme_bw()+
+  xtitletheme + ytitletheme +
+  scale_fill_manual(values=c('brown1','tan1','lightgoldenrod1'))+
+  labs(x = "Plot", y = "Mammal Pop. Estimates")+
+  guides(fill = FALSE)
+
+ggarrange(liz, mam)
+ggsave("data_visualizations/Fig7_VertPopEstimates.jpeg", dpi = 320)
+
+```
+## Figure 8. 
+**Dredge of best fit tick count models**
+```{r}
+
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+min(Tick$total)
+model <- na.omit(Tick)
+big.model <- glm(total  ~ plot + site + plot*site, 
+                 family = "poisson",
+                 data = model,
+                 na.action = na.pass)
+sal.dredge <- dredge(big.model)
+
+glm.best <-model.sel(sal.dredge) %>% 
+  gt() %>% 
+  fmt_number(columns = 6:9,
+             decimals = 2) %>%
+  tab_header(title="Model Selection",
+             subtitle = "tick count ~ plot + site + plot*site") 
+
+glm.best %>%
+  gtsave("data_visualizations/Fig8_ModelSelection.png")
+```
+
+## Figure 9
+**Model outputs for GLMM negative binomial**
+```{r}
+export_summs(mod_plot, mod_site, mod_both,
+           scale = TRUE,
+           error_format = "{statistic}, 95% CI [{conf.low}, {conf.high}]",
+           borders = .5,
+  outer_borders = 0,
+             to.file = "pdf", 
+             file.name = "data_visualizations/Fig9_BestFitModelsQ1.pdf")
+
+```
+
+## Figure 10.
+**summaries of tick counts by site and plot**
+```{r}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+
+counts <- Tick %>%
+  group_by(site, plot) %>%
+  tally(total) 
+
+
+pdf("data_visualizations/Fig10_TickCount.pdf")
+grid.table(counts)
+
+```
+
+## Figure 11.
+**summaries of tick counts by month**
+```{r}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+Tick$month <- factor(Tick$month, 
+                        levels = c('January', 'February', 'March',
+                                   'April', 'May', 'June', 'July',
+                                   'August', 'September', 'October',
+                                   'November', 'December'))
+
+counts_month <- Tick %>%
+  group_by(month) %>%
+  tally(total) 
+
+
+pdf("data_visualizations/Fig11_TickCountMonth.pdf")
+grid.table(counts_month)
+```
+

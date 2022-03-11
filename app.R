@@ -20,7 +20,10 @@ library(shinythemes)
 library(ggthemes)
 library(tmap)
 library(sf)
+library(leaflet)
 
+
+pt_coords <- reactiveVal()
 
 long <- read_csv("long.csv")
 tick_graph <-
@@ -66,7 +69,9 @@ life_stage_long <- inner_join(ca_subset_sf, tick_stage_long)
 ticks <- read_csv("Tejon_MixedModels_Dataset.csv") %>%
   select(year, month, site, block, plot, total, deoc, ipac, deva, log_total)
 
+
 #Tick2 <- read_csv("Tejon_clean-main/data_visualizations/Viz_Tejon_MeanComparisons_Dataset.csv")
+
 
 # Create the user interface:
 # using navbarPage() to setup tabs
@@ -89,11 +94,13 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                               img(src = "tick_pic.png", 
                                   height = 443, width = 591),
                               p("Image Credit: CADPH"),
+
                               h4("Project Summaries"),
                               h5("Human Lyme Disease"), #put project summary after this heading
                               h5("Tick Life Stage Distribution in CA"), #put project summary after this heading
                               h5("Case Study: Effect of Climate and Herbivory Intensity on Tick Abundance"), #put project summary after this heading
                               p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27 1ha plots, initiated in 2016 to understand the ecological effects of shifting wildlife and livestock assemblages across varying climates. The 27 experimental plots spanned three aridity levels, and each level included three replicate randomized blocks. Each block contained three treatment levels of large herbivores – a) no wild ungulates or livestock (total exclosure) which functionally excluded all large herbivores over 40 kg body mass, b) wild ungulates only (partial exclosure), and c) both wildlife + livestock (open). The unique life cycle of ticks consisting of an on-host and off host (susceptible to environmental variables) stages makes them particularly sensitive to the interactive effects of changing climate and herbivory in ecosystems.")
+
                             ))),
                  # first tab
                  tabPanel("Human Lyme Disease",
@@ -221,6 +228,7 @@ server <- function(input, output) ({
   })
   
   #end tab 3 output 
+
 })
 
 # Combine them into an app:

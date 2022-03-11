@@ -1,0 +1,358 @@
+---
+title: "BestAnalyses_script"
+author: "sbsambado"
+date: "10/26/2021"
+output: html_document
+---
+
+Set up
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(plyr)
+library(car)
+library(knitr)
+library(lme4)
+library(jtools)
+library(effects)
+library(psych)
+library(gt)
+library(MuMIn)
+
+
+```
+
+*Notes*
+plot = cattle
+site = climate
+
+## Question 1: How do environmental stressors - cattle & climate - impact tick counts? 
+
+--> best fit model incorporates both stressors
+--> however, looked at individually, climate is the more strong predictor of tick counts
+--> best fit random effects were month & plotID  
+
+Step 1. Import data set
+```{r import}
+Tick <- read_csv("data_analyses/Tejon_MeanComparisons_Dataset.csv")
+```
+
+Step 2. Build best fit models
+- look at Tejon_Analyses_20211021 for all model combinations
+
+```{r best fit models}
+mod_plot <- glmer.nb(total ~ plot + (1|month) + (1|plotID), 
+            data = Tick, family = "poisson")
+
+mod_site <- glmer.nb(total ~ site  + (1|month) + (1|plotID), 
+            data = Tick, family = "poisson")
+
+mod_both <- glmer.nb(total ~ site + plot + (1|month) + (1|plotID), 
+            data = Tick, family = "poisson")
+
+
+model_results <- AIC(mod_plot, mod_site, mod_both)
+
+model_models <- list(mod_plot, mod_site, mod_both)
+
+model_results$BIC <- sapply(model_models, BIC)
+model_models_summary <- lapply(model_models, summary)
+for(i in 1:(length(model_models)-1)){ #this creates a variable i that starts with the value i=1
+  model_results$rsq[i] <- model_models_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  model_results$adj_rsq[i] <- model_models_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+model_results$variables <- c("plot", "site", "plot + site")
+
+model_models <- kable(model_results, digits = 2, align = "c") %>%
+  kable_styling()
+
+model_models
+
+```
+
+Step 3. Model diagnostics
+
+3A. summary functions
+```{r model diagnostics pt 1}
+
+## summary()
+summary(mod_plot) # p = 0.00770
+summary(mod_site) # p = 0.00567
+summary(mod_both) # p = 0.000187
+
+## summ() function
+               # Est    S.E.    z value   p
+summ(mod_plot) # -2.05   0.77    -2.67   0.01  ; Pseudo-R² (total) = 0.81 
+summ(mod_site) # -2.09   0.75    -2.77   0.01  ; Pseudo-R² (total) = 0.81 
+summ(mod_both) # -2.82   0.76    -3.74   0.00  ; Pseudo-R² (total) = 0.81
+
+```
+
+3B. Akaike weight
+- get relative support for each model by standardizing the likelihood of the model
+```{r model diagnostics pt 2}
+
+## Option 1: Calculate weights manually
+
+# calculate deltai2
+
+delta1 <- exp(-0.5*(AIC(mod_plot) - AIC(mod_both)))
+delta2 <- exp(-0.5*(AIC(mod_site) - AIC(mod_both)))
+delta3 <- exp(-0.5*(AIC(mod_both) - AIC(mod_both)))
+
+# sum likelihoods
+sum_likes <- sum(c(delta1, delta2, delta3))
+
+# calculate weights
+weight1 <- delta1/sum_likes
+weight2 <- delta2/sum_likes
+weight3 <- delta3/sum_likes
+
+# lets make a table
+weights <- tribble(
+  ~Model,   ~Delta,           ~Weights,   ~Variable,
+  "mod_plot", round(delta1, 2), round(weight1, 2), "plot",
+  "mod_site", round(delta2, 2), round(weight2, 2), "site",
+  "mod_both", round(delta3, 2), round(weight3, 2), "both") %>% 
+  gt() %>% 
+  tab_style(
+    style = cell_text(size = "small"),
+    locations = cells_body())
+
+
+weights
+
+
+## Option 2: dredge the model
+
+min(Tick$total)
+model <- na.omit(Tick)
+big.model <- glm(total  ~ plot + site + plot*site, 
+                 family = "poisson",
+                 data = model,
+                 na.action = na.pass)
+sal.dredge <- dredge(big.model)
+
+glm.best <-model.sel(sal.dredge) %>% 
+  gt() %>% 
+  tab_header(title="Model Selection",
+             subtitle = "total ~ plot + site + plot*site")
+
+glm.best
+
+# delta = 0 is best model
+
+```
+
+Step 4. Plot model outputs
+```{r plot model outputs, results = 'asis'}
+
+## plot_summs()
+plot_summs(mod_plot, mod_site, mod_both,
+           scale = TRUE,
+           model.names = c("Only Cattle (plot)", "Only Climate (site)", "Both Cattle & Climate"),
+           inner_ci_level = .8,
+           robust = TRUE,
+           coefs = c("Partial plot" = "plotPartial",
+                     "Total plot" = "plotTotal",
+                     "Inter. site" = "siteIntermediate", 
+                     "Mesic site" = "siteMesic"),
+           legend.direction = "horizontal")
+
+```
+
+Step 5. Create output table of model results
+```{r model table statistics}
+export_summs(mod_plot, mod_site, mod_both,
+           scale = TRUE,
+           error_format = "({statistic}, 95% CI [{conf.low}, {conf.high}], p = {p.value})",
+             to.file = "docx", 
+             file.name = "Tejon_BestFitModels.docx")
+```
+
+
+## Question 2: How do environmental stressors impact populations of two important vertebrate hosts -- lizards and mammals -- in the tick system?
+
+--> lizards are significantly more impacted by climate than plot
+--> mammals are trending to be significantly impacted by plot than climate
+
+Step 1. Import & tidy dataset
+```{r import and tidy}
+
+pop <- read_csv("raw_data/tejon_mamliz_popestimates.csv")
+
+# rename columns to be consistant
+names(pop)[5] <- "mam_estimate"
+
+# change data structure for analyses
+pop$site <- as.factor(pop$site)
+pop$plot <- as.factor(pop$plot)
+
+```
+
+Step 2. Compare means of population estimates
+
+2A. Lizards
+```{r lizards}
+# lizards were only sampled at two sites, so will use a two sample t-test if normal
+
+# check normality
+qqPlot(pop$liz_estimate) # looks normal, but..
+shapiro.test(pop$liz_estimate) # p < 0.05, so data are not normal
+
+# check variance
+leveneTest(pop$liz_estimate ~ pop$site) #  p < 0.05, F = 7.4; variances are different
+
+# non-parametric Mann-Whitney U is testing the shape of the two distributions are different
+
+# wilcox rank sum test with continuity correction (non-equal variances)
+wilcox.test(liz_estimate ~ site, data = pop) #W = 11, p-value  = 0.01306
+
+# p < 0.05, reject H0 that means are equal to 0
+
+## lizard population estimates are different at Intermediate and Arid sites
+
+```
+
+2B. Mammals
+```{r mammals}
+
+# mammal populations did not significantly differ across sites or plots but that may be due to low sample numbers with kruskal wallis
+
+# let's do open vs total plots --> mann-whitney U test
+
+pop_sub <- subset(pop, pop$plot != "Partial")
+wilcox.test(mam_estimate ~ plot, data = pop_sub)
+# W = 11, p-value = 0.05488 (trending significant)
+```
+
+## Question 3: Are tick counts impacted by lizard and mammal population estimates?
+
+--> lizards population estimates are more associated with tick counts than mammals
+
+Step 1. Import & tidy dataset
+```{r import and tidy}
+FINAL <- read_csv("data_analyses/Tejon_MixedModels_Dataset.csv")
+
+# drop N/A values
+FINAL <- FINAL[which(FINAL$mam_estimates != "#N/A"),]
+FINAL <- FINAL[which(FINAL$liz_estimates != "#N/A"),]
+
+# check it worked
+unique(FINAL$mam_estimates)
+unique(FINAL$liz_estimates)
+
+str(FINAL)
+```
+
+Step 2. Spearman's rank correlation
+
+```{r spearman rank correlation}
+# select subset of data to use for test & visualize
+FINAL_cor <- subset(FINAL, select = c(6,20:21))
+
+# change structure of data for analyses
+FINAL_cor$total <- as.numeric(FINAL_cor$total)
+FINAL_cor$mam_estimates <- as.numeric(FINAL_cor$mam_estimates)
+FINAL_cor$liz_estimates <- as.numeric(FINAL_cor$liz_estimates)
+
+# visualize data
+pairs.panels(FINAL_cor)
+
+## run correlation test
+
+# lizards
+cor.test(FINAL_cor$total,FINAL_cor$liz_estimates,
+         method = "spearman")
+# p-value = 1.755e-05
+# rho = 0.1687151
+
+# mammals
+cor.test(FINAL_cor$total,FINAL_cor$mam_estimates,
+         method = "spearman")
+# p-value = 0.3669
+# rho = -0.03569831 
+
+
+```
+
+Step 3. Build models : GLM with Poisson distribution 
+
+~ I think this may not be appropriate based on the aggregate of the pop estimates ~
+
+```{r glm with poisson}
+
+mod_mam <- glm(total ~ mam_estimates, data = FINAL,
+               family = "poisson")
+
+mod_liz <- glm(total ~ liz_estimates, data = FINAL,
+               family = "poisson")
+
+mod_ml <- glm(total ~ mam_estimates + liz_estimates, data = FINAL,
+               family = "poisson")
+
+## Model comparison
+
+model_results <- AIC(mod_mam, mod_liz, mod_ml)
+
+model_models <- list(mod_mam, mod_liz, mod_ml)
+
+model_results$BIC <- sapply(model_models, BIC)
+model_models_summary <- lapply(model_models, summary)
+
+for(i in 1:(length(model_models)-1)){ #this creates a variable i that starts with the value i=1
+  model_results$rsq[i] <- model_models_summary[[i]]$r.squared #we assign the rsq value from model i to the i'th row of the column 'rsq' in the table 'results'
+  model_results$adj_rsq[i] <- model_models_summary[[i]]$adj.r.squared #same for adjusted rsq
+} #now we go back to the beginning of the for-loop, add 1 to the value of i, and do everything again
+
+model_results$variables <- c("mam", "liz", "mam + liz")
+
+model_models <- kable(model_results, digits = 2, align = "c") %>%
+  kable_styling()
+
+model_models
+```
+
+Step 4. Model diagnostics
+
+4A. summary functions
+```{r model diagnostics pt 1}
+
+## summary()
+summary(mod_mam) # p = <2e-16
+summary(mod_liz) # p = <2e-16
+summary(mod_ml) # p = <2e-16
+
+## summ() function
+               # Est    S.E.    z value   p
+summ(mod_mam) #  0.91   0.04    23.12   0.00   
+summ(mod_liz) # -1.46   0.09   -17.04   0.00 
+summ(mod_ml) #  -1.26   0.10   -12.49   0.00
+
+```
+
+4B. Dredge model
+```{r model diagnostics pt 2}
+## Option 2: dredge the model
+
+min(FINAL$total)
+model <- na.omit(FINAL)
+big.model <- glm(total ~ mam_estimates + liz_estimates, 
+               family = "poisson",
+                 data = model,
+                 na.action = na.pass)
+sal.dredge <- dredge(big.model)
+
+glm.best <-model.sel(sal.dredge) %>% 
+  gt() %>% 
+  tab_header(title="Model Selection",
+             subtitle = "total ~ mam + liz")
+
+glm.best
+
+```
+
