@@ -18,7 +18,10 @@ library(plotly)
 library(ggthemes)
 library(tmap)
 library(sf)
+library(leaflet)
 
+
+pt_coords <- reactiveVal()
 
 long <- read_csv("long.csv")
 tick_graph <-
@@ -182,6 +185,7 @@ server <- function(input, output) ({
           legend.title.size = 1,
           legend.text.size = 0.6)
     })
+
 
     ## Pt 3: Tick Seasonality 
     
