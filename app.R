@@ -91,7 +91,7 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                                             Conner Jainese"),
                                          img(src = c("kacie.jpeg"),
                                              height = 90, width =75),
-                                         img(src = c("steph.jpg"),
+                                         img(src = c("steph.JPG"),
                                           height = 90, width =75),
                                           img(src = c("corndog.jpg"),
                                               height = 90, width =75)
@@ -127,7 +127,7 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                             # create main panel for output
                             mainPanel(
                               h3("Human Lyme disease incidence in California"),
-                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below is the human Lyme disease incidence in California from 2009-2019.Double click on counties in the the line plot to isolate the data."),
+                              p("Lyme disease incidence in California is low compared to the East coast of the United States, yet it is believed that human cases are underreported. Below are two human Lyme disease incidence data sets in California, one from 2011-2020 and the other from 2009-2019.Double click on counties in the the line plot to isolate the data."),
                               plotlyOutput(outputId = "lyme_plot"),
                               h3("California map of human Lyme disease incidence per 100,000 individuals"),
                               p("Hover over the county of interest on the map of California to isolate the average human Lyme disease incidence per 100,000 people from  2009-2019"),
@@ -162,19 +162,23 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                  tabPanel("Case Study",
                           sidebarLayout(position = "right",
                                         # create sidebar panel that will house widgets
-                                        sidebarPanel(NULL,
+                                        sidebarPanel(NULL, width = 5,
                                                      # add radiobutton group
                                                      radioButtons(inputId = "ticks_site",
                                                                   label = "Select climate",
-                                                                  choices = c("Arid", "Intermediate", "Mesic"))),
+                                                                  choices = c("Arid", "Intermediate", "Mesic")),
+                                                     img(src = "Tejon.png",
+                                                         height = 270, width = 380),
+                                                     p("SJArt", style = "font-size:10px")
+),
                                         # create main panel for output
-                                        mainPanel(h4("Tick Abundance at the Tejon Ranch Exclosure Experiment (TREE)."),
-                                                  h5("Tick Abundance by Climate Type and Herbivore Treatment"),
+                                        mainPanel(NULL, width = 7, h4("How Climate and Herbivory Intensity can impact Tick Abundances on the Landscape"),
+                                                  
                                                   plotOutput(outputId = "climate_plot"),
-                                                  h5("TREE Study Design Visual"),
-                                                  img(src = "Tejon.png",
-                                                      height = 443, width = 750),
-                                                  p("SJArt")
+                                                  p("Populations of large-bodied herbivores are shifting around the world. Directly, large wildlife can serve as hosts for ticks, maintaining tick disease transmission cycles. However indirectly, they can modify habitat and suppress abundance of small animal hosts, which in turn suppresses tick densities, thereby decreasing disease risk. Wildlife losses are also frequently accompanied by livestock additions. We used a large-scale exclosure experiment replicated along an elevational gradient to examine the effects of large wildlife removal and cattle additions on ticks and tickborne disease dynamics in southern California. We found that overall, tick abundance increases when wild herbivores are removed, and decreases when livestock are added. Importantly, in addition to direct effects of climate on tick abundance, climate also mediated the effect of ungulates on questing tick density. Click on the buttons above to observe how tick abundance changed under different climate and herbivory treatments."),
+                                                  h4("Study Design"),
+                                                  p("The Tejon Ranch Exclosure Experiment (TREE) is an ongoing study consisting of 27, 1 hectare plots, to understand the ecological effects of changing wildlife and livestock assemblages across climate zones. The 27 plots span three aridity levels (Arid - hottest, driest; Intermediate; Mesic - coolest, wettest). Each zone includes three replicate blocks. Each block containes three treatment levels of large herbivores – a) no wild large herbivores or livestock (total exclosure), b) wild large herbivores only (partial exclosure), and c) both wild large herbivores + livestock (open). The experiment is located on Tejon Ranch Company property managed in collaboration with the Tejon Ranch Conservancy just outside of Arvin, California.")
+
                                         ))))
 
 # Create the server function:
